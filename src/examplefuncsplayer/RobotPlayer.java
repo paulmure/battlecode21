@@ -1,36 +1,26 @@
 package examplefuncsplayer;
+
 import battlecode.common.*;
 
 public strictfp class RobotPlayer {
     static RobotController rc;
 
-    static final RobotType[] spawnableRobot = {
-        RobotType.POLITICIAN,
-        RobotType.SLANDERER,
-        RobotType.MUCKRAKER,
-    };
+    static final RobotType[] spawnableRobot = { RobotType.POLITICIAN, RobotType.SLANDERER, RobotType.MUCKRAKER, };
 
-    static final Direction[] directions = {
-        Direction.NORTH,
-        Direction.NORTHEAST,
-        Direction.EAST,
-        Direction.SOUTHEAST,
-        Direction.SOUTH,
-        Direction.SOUTHWEST,
-        Direction.WEST,
-        Direction.NORTHWEST,
-    };
+    static final Direction[] directions = { Direction.NORTH, Direction.NORTHEAST, Direction.EAST, Direction.SOUTHEAST,
+            Direction.SOUTH, Direction.SOUTHWEST, Direction.WEST, Direction.NORTHWEST, };
 
     static int turnCount;
 
     /**
-     * run() is the method that is called when a robot is instantiated in the Battlecode world.
-     * If this method returns, the robot dies!
+     * run() is the method that is called when a robot is instantiated in the
+     * Battlecode world. If this method returns, the robot dies!
      **/
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
 
-        // This is the RobotController object. You use it to perform actions from this robot,
+        // This is the RobotController object. You use it to perform actions from this
+        // robot,
         // and to get information on its current status.
         RobotPlayer.rc = rc;
 
@@ -41,17 +31,27 @@ public strictfp class RobotPlayer {
             turnCount += 1;
             // Try/catch blocks stop unhandled exceptions, which cause your robot to freeze
             try {
-                // Here, we've separated the controls into a different method for each RobotType.
+                // Here, we've separated the controls into a different method for each
+                // RobotType.
                 // You may rewrite this into your own control structure if you wish.
                 System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
                 switch (rc.getType()) {
-                    case ENLIGHTENMENT_CENTER: runEnlightenmentCenter(); break;
-                    case POLITICIAN:           runPolitician();          break;
-                    case SLANDERER:            runSlanderer();           break;
-                    case MUCKRAKER:            runMuckraker();           break;
+                    case ENLIGHTENMENT_CENTER:
+                        runEnlightenmentCenter();
+                        break;
+                    case POLITICIAN:
+                        runPolitician();
+                        break;
+                    case SLANDERER:
+                        runSlanderer();
+                        break;
+                    case MUCKRAKER:
+                        runMuckraker();
+                        break;
                 }
 
-                // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
+                // Clock.yield() makes the robot wait until the next turn, then it will perform
+                // this loop again
                 Clock.yield();
 
             } catch (Exception e) {
@@ -62,34 +62,37 @@ public strictfp class RobotPlayer {
     }
 
     static void runEnlightenmentCenter() throws GameActionException {
-        RobotType toBuild = randomSpawnableRobotType();
-        int influence = 50;
+        // RobotType toBuild = RobotType.SLANDERER;
+        int influence = rc.getInfluence();
         for (Direction dir : directions) {
-            if (rc.canBuildRobot(toBuild, dir, influence)) {
-                rc.buildRobot(toBuild, dir, influence);
-            } else {
+            if (rc.canBuildRobot(RobotType.SLANDERER, dir, influence - influence % 20)) {
+                rc.buildRobot(RobotType.SLANDERER, dir, influence - influence % 20);
                 break;
             }
+        }
+        if (rc.getRoundNum() % 50 != 0) {
+            System.out.println("I have " + influence + "influence on round " + rc.getRoundNum());
         }
     }
 
     static void runPolitician() throws GameActionException {
-        Team enemy = rc.getTeam().opponent();
-        int actionRadius = rc.getType().actionRadiusSquared;
-        RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
-        if (attackable.length != 0 && rc.canEmpower(actionRadius)) {
-            System.out.println("empowering...");
-            rc.empower(actionRadius);
-            System.out.println("empowered");
-            return;
+        /*
+         * Team enemy = rc.getTeam().opponent(); int actionRadius =
+         * rc.getType().actionRadiusSquared; RobotInfo[] attackable =
+         * rc.senseNearbyRobots(actionRadius, enemy); if (attackable.length != 0 &&
+         * rc.canEmpower(actionRadius)) { System.out.println("empowering...");
+         * rc.empower(actionRadius); System.out.println("empowered"); return; } if
+         * (tryMove(randomDirection())) System.out.println("I moved!");
+         */
+        if (rc.canEmpower(1)) {
+            rc.empower(1);
         }
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
     }
 
     static void runSlanderer() throws GameActionException {
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
+        if (tryMove(randomDirection())) {
+            // System.out.println("I moved!");
+        }
     }
 
     static void runMuckraker() throws GameActionException {
@@ -135,10 +138,12 @@ public strictfp class RobotPlayer {
      * @throws GameActionException
      */
     static boolean tryMove(Direction dir) throws GameActionException {
-        System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
+        // System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " +
+        // rc.getCooldownTurns() + " " + rc.canMove(dir));
         if (rc.canMove(dir)) {
             rc.move(dir);
             return true;
-        } else return false;
+        } else
+            return false;
     }
 }
