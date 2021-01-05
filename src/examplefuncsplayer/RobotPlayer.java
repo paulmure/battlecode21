@@ -1,4 +1,4 @@
-package ourplayer;
+package examplefuncsplayer;
 import battlecode.common.*;
 
 public strictfp class RobotPlayer {
