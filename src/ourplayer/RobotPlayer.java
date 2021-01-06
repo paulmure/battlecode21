@@ -1,6 +1,12 @@
 package ourplayer;
 
+import javax.management.relation.Role;
+
 import battlecode.common.*;
+
+interface RoleController {
+    public void run() throws GameActionException;
+}
 
 public strictfp class RobotPlayer {
     static RobotController rc;
@@ -24,6 +30,26 @@ public strictfp class RobotPlayer {
         // and to get information on its current status.
         RobotPlayer.rc = rc;
 
+        RoleController controller;
+
+        switch (rc.getType()) {
+            case ENLIGHTENMENT_CENTER:
+                controller = new EnlightenmentCenter();
+                break;
+            case POLITICIAN:
+                controller = new Politician();
+                break;
+            case MUCKRAKER:
+                controller = new Muckracker();
+                break;
+            case SLANDERER:
+                controller = new Slanderer();
+                break;
+            default:
+                controller = null;
+                break;
+        }
+
         turnCount = 0;
 
         // System.out.println("I'm a " + rc.getType() + " and I just got created!");
@@ -35,21 +61,7 @@ public strictfp class RobotPlayer {
                 // RobotType.
                 // You may rewrite this into your own control structure if you wish.
                 // System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
-                switch (rc.getType()) {
-                    case ENLIGHTENMENT_CENTER:
-                        runEnlightenmentCenter();
-                        break;
-                    case POLITICIAN:
-                        runPolitician();
-                        break;
-                    case SLANDERER:
-                        runSlanderer();
-                        break;
-                    case MUCKRAKER:
-                        runMuckraker();
-                        break;
-                }
-
+                controller.run();
                 // Clock.yield() makes the robot wait until the next turn, then it will perform
                 // this loop again
                 Clock.yield();
@@ -59,57 +71,6 @@ public strictfp class RobotPlayer {
                 e.printStackTrace();
             }
         }
-    }
-
-    static void runEnlightenmentCenter() throws GameActionException {
-        // RobotType toBuild = RobotType.SLANDERER;
-        int influence = rc.getInfluence();
-        for (Direction dir : directions) {
-            if (rc.canBuildRobot(RobotType.SLANDERER, dir, influence - influence % 20)) {
-                rc.buildRobot(RobotType.SLANDERER, dir, influence - influence % 20);
-                break;
-            }
-        }
-        if (rc.getRoundNum() % 50 == 0) {
-            System.out.println("I have " + influence + " influence on round " + rc.getRoundNum());
-        }
-    }
-
-    static void runPolitician() throws GameActionException {
-        /*
-         * Team enemy = rc.getTeam().opponent(); int actionRadius =
-         * rc.getType().actionRadiusSquared; RobotInfo[] attackable =
-         * rc.senseNearbyRobots(actionRadius, enemy); if (attackable.length != 0 &&
-         * rc.canEmpower(actionRadius)) { System.out.println("empowering...");
-         * rc.empower(actionRadius); System.out.println("empowered"); return; } if
-         * (tryMove(randomDirection())) System.out.println("I moved!");
-         */
-        if (rc.canEmpower(1)) {
-            rc.empower(1);
-        }
-    }
-
-    static void runSlanderer() throws GameActionException {
-        if (tryMove(randomDirection())) {
-            // System.out.println("I moved!");
-        }
-    }
-
-    static void runMuckraker() throws GameActionException {
-        Team enemy = rc.getTeam().opponent();
-        int actionRadius = rc.getType().actionRadiusSquared;
-        for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, enemy)) {
-            if (robot.type.canBeExposed()) {
-                // It's a slanderer... go get them!
-                if (rc.canExpose(robot.location)) {
-                    System.out.println("e x p o s e d");
-                    rc.expose(robot.location);
-                    return;
-                }
-            }
-        }
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
     }
 
     /**
