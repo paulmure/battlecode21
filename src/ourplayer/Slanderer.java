@@ -14,7 +14,8 @@ public class Slanderer extends RobotPlayer implements RoleController {
 
     public Slanderer() {
         age = 0;
-        endRadius2 = 40;
+        // change this to change outer radius^2
+        endRadius2 = 120;
     }
 
     public void run() throws GameActionException {
@@ -46,7 +47,6 @@ public class Slanderer extends RobotPlayer implements RoleController {
             if (nearby[i].type == RobotType.ENLIGHTENMENT_CENTER) {
                 spawnEC = nearby[i].location;
                 spawnECid = nearby[i].ID;
-                System.out.println("HOME ENLIGHTENMENT CENTER LOCATED: " + spawnEC.x + " , " + spawnEC.y);
             }
         }
 
@@ -71,8 +71,8 @@ public class Slanderer extends RobotPlayer implements RoleController {
         double bestWeight = 0.0f;
         Direction bestDirection = null;
 
-        int ecVecX = spawnEC.x - rc.getLocation().x;
-        int ecVecY = spawnEC.x - rc.getLocation().x;
+        int ecVecX = rc.getLocation().x - spawnEC.x;
+        int ecVecY = rc.getLocation().y - spawnEC.y;
         double ecVecLength = Math.sqrt(ecVecX * ecVecX + ecVecY * ecVecY);
 
         int targetVecX = 0;
@@ -134,11 +134,9 @@ public class Slanderer extends RobotPlayer implements RoleController {
             // adjust a to produce steeper or smoother down
             double r2Weight = 1 / (1 + deltaR2);
 
-            double crossProduct = (ecVecX * targetVecY - ecVecY * targetVecX) / (ecVecLength * targetVecLength);
+            double crossProduct = -(ecVecX * targetVecY - ecVecY * targetVecX) / (ecVecLength * targetVecLength);
 
             double totalWeight = r2Weight * crossProduct;
-
-            System.out.println("secx:" + spawnEC.x + " myx: " + rc.getLocation().x + " ecvx: " + ecVecX);
 
             if (totalWeight > bestWeight) {
                 bestWeight = totalWeight;

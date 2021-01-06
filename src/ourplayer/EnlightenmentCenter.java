@@ -15,10 +15,6 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
 
             MapLocation loc = rc.getLocation();
 
-            // FOR THE LOVE OF GOD, DELETE THIS LINE AT SOME POINT
-            rc.buildRobot(RobotType.SLANDERER, Direction.NORTH, 50);
-            //////
-
             for (int x = -5; x < 5; x++) {
                 for (int y = -5; y < 5; y++) {
 
@@ -34,11 +30,10 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
 
         int influence = rc.getInfluence();
 
-        /*
-         * for (Direction dir : directions) { if (rc.canBuildRobot(RobotType.SLANDERER,
-         * dir, influence)) { rc.buildRobot(RobotType.SLANDERER, dir, influence); break;
-         * } }
-         */
+        Direction dir = randomDirection();
+        if (rc.canBuildRobot(RobotType.SLANDERER, dir, influence)) {
+            rc.buildRobot(RobotType.SLANDERER, dir, influence);
+        }
 
         if (rc.getRoundNum() % 50 == 0) {
             System.out.println("I have " + influence + " influence on round " + rc.getRoundNum());
