@@ -44,8 +44,7 @@ public strictfp class RobotPlayer {
                 controller = new Slanderer();
                 break;
             default:
-                controller = null;
-                break;
+                return;
         }
 
         turnCount = 0;
