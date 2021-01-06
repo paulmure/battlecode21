@@ -1,7 +1,5 @@
 package ourplayer;
 
-import javax.management.relation.Role;
-
 import battlecode.common.*;
 
 interface RoleController {
