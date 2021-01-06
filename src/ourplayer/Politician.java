@@ -5,8 +5,8 @@ import battlecode.common.*;
 public class Politician extends RobotPlayer implements RoleController {
     
     public void run() throws GameActionException {
-        System.out.println("Politician running");
-        Team enemy = rc.getTeam().opponent();
+
+        /*Team enemy = rc.getTeam().opponent();
         int actionRadius = rc.getType().actionRadiusSquared;
         RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
         if (attackable.length != 0 && rc.canEmpower(actionRadius)) {
@@ -16,7 +16,11 @@ public class Politician extends RobotPlayer implements RoleController {
             return;
         }
         tryMove(randomDirection());
-            // System.out.println("I moved!");
+            // System.out.println("I moved!");*/
+
+        if(rc.canEmpower(1)){
+            rc.empower(1);
+        }
         
     }
 
