@@ -29,7 +29,7 @@ public strictfp class RobotPlayer {
         RobotPlayer.rc = rc;
 
         RoleController controller;
-
+        
         switch (rc.getType()) {
             case ENLIGHTENMENT_CENTER:
                 controller = new EnlightenmentCenter();
@@ -50,11 +50,35 @@ public strictfp class RobotPlayer {
 
         turnCount = 0;
 
+        RobotType lastRoundType = rc.getType();
         // System.out.println("I'm a " + rc.getType() + " and I just got created!");
         while (true) {
             ++turnCount;
+            
             // Try/catch blocks stop unhandled exceptions, which cause your robot to freeze
             try {
+                // verify that type has not changed
+                if (rc.getType() != lastRoundType){
+
+                    switch (rc.getType()) {
+                        case ENLIGHTENMENT_CENTER:
+                            controller = new EnlightenmentCenter();
+                            break;
+                        case POLITICIAN:
+                            controller = new Politician();
+                            break;
+                        case MUCKRAKER:
+                            controller = new Muckracker();
+                            break;
+                        case SLANDERER:
+                            controller = new Slanderer();
+                            break;
+                        default:
+                            controller = null;
+                            break;
+                    }
+
+                }
                 // Here, we've separated the controls into a different method for each
                 // RobotType.
                 // You may rewrite this into your own control structure if you wish.
@@ -62,6 +86,7 @@ public strictfp class RobotPlayer {
                 controller.run();
                 // Clock.yield() makes the robot wait until the next turn, then it will perform
                 // this loop again
+                lastRoundType = rc.getType();
                 Clock.yield();
 
             } catch (Exception e) {
