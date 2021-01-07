@@ -1,6 +1,7 @@
 package ourplayer;
 
 import battlecode.common.*;
+import java.util.ArrayList;
 
 interface RoleController {
     public void run() throws GameActionException;
@@ -35,6 +36,8 @@ public strictfp class RobotPlayer {
                 controller = new EnlightenmentCenter();
                 break;
             case POLITICIAN:
+                System.out.println("Initializing politician from here for some reason");
+                System.out.println("LOC: "+ rc.getLocation());
                 controller = new Politician();
                 break;
             case MUCKRAKER:
@@ -65,7 +68,13 @@ public strictfp class RobotPlayer {
                             controller = new EnlightenmentCenter();
                             break;
                         case POLITICIAN:
-                            controller = new Politician();
+                            if(controller instanceof Slanderer){
+                                System.out.println("passing ec info: " + ((Slanderer) controller).getSpawnEc());
+                                controller = new Politician(((Slanderer) controller).getSpawnEc(), ((Slanderer) controller).getSpawnEcId());
+                            } else {
+                                System.out.println("Controller was not Instance of Slanderer. was "+controller);
+                                controller = new Politician();
+                            }
                             break;
                         case MUCKRAKER:
                             controller = new Muckracker();
@@ -129,5 +138,115 @@ public strictfp class RobotPlayer {
             return true;
         } else
             return false;
+    }
+
+    protected ArrayList<Direction> getPossibleMoves() {
+        ArrayList<Direction> possibleMoves = new ArrayList<>();
+        for (Direction d : Direction.values()) {
+            if (rc.canMove(d)) {
+                possibleMoves.add(d);
+            }
+        }
+        return possibleMoves;
+    }
+
+    protected Direction getBest(ArrayList<Direction> possibleMoves, MapLocation spawnEC, double targetRadius, double standingWeight) {
+        // ~~~~~~~~ MODIFY THESE TO CHANGE PRIORITIZATION ~~~~~~~~~//
+        // double kRadius = 0.5f;
+        // double kClockwise = 0.5f;
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+
+        
+        // System.out.println("spawnEC: "+spawnEC);
+        int ecVecX = rc.getLocation().x - spawnEC.x;
+        int ecVecY = rc.getLocation().y - spawnEC.y;
+        double ecVecLength = Math.sqrt(ecVecX * ecVecX + ecVecY * ecVecY);
+
+        int targetVecX = 0;
+        int targetVecY = 0;
+        double targetVecLength = 1;
+
+        double bestWeight = standingWeight / (1 + (Math.abs(targetRadius-(ecVecX * ecVecX + ecVecY * ecVecY))));
+        Direction bestDirection = null;
+
+        for (Direction d : possibleMoves) {
+            switch (d) {
+                case NORTH:
+                    targetVecX = 0;
+                    targetVecY = 1;
+                    targetVecLength = 1;
+                    break;
+                case NORTHEAST:
+                    targetVecX = 1;
+                    targetVecY = 1;
+                    targetVecLength = 1.4142;//sqrt(2)
+                    break;
+                case EAST:
+                    targetVecX = 1;
+                    targetVecY = 0;
+                    targetVecLength = 1;
+                    break;
+                case SOUTHEAST:
+                    targetVecX = 1;
+                    targetVecY = -1;
+                    targetVecLength = 1.4142;//sqrt(2)
+                    break;
+                case SOUTH:
+                    targetVecX = 0;
+                    targetVecY = -1;
+                    targetVecLength = 1;
+                    break;
+                case SOUTHWEST:
+                    targetVecX = -1;
+                    targetVecY = -1;
+                    targetVecLength = 1.4142;//sqrt(2)
+                    break;
+                case WEST:
+                    targetVecX = -1;
+                    targetVecY = 0;
+                    targetVecLength = 1;
+                    break;
+                case NORTHWEST:
+                    targetVecX = -1;
+                    targetVecY = 1;
+                    targetVecLength = 1.4142;//sqrt(2)
+                    break;
+                default:
+                    // do nothing
+            }
+
+            // to calculate r^2 to given move, use the current pos (ecVec) and add the
+            // move's vector (targetVec), then r^2 it
+            int moveR2 = (int) (Math.pow(ecVecX + targetVecX, 2) + Math.pow(ecVecY + targetVecY, 2));
+            double deltaR2 = Math.abs(targetRadius - moveR2);
+            // equation here for adjustment :
+            // y = 1 / (ax + 1)
+            // adjust a to produce steeper or smoother down
+            double r2Weight = 1 / (1 + deltaR2); // (0, 1]
+
+            double crossProduct = -(ecVecX * targetVecY - ecVecY * targetVecX) / (ecVecLength * targetVecLength); // (-1, 1)
+
+            double totalWeight = r2Weight * crossProduct;
+
+            if (totalWeight > bestWeight) {
+                bestWeight = totalWeight;
+                bestDirection = d;
+            }
+        }
+        return bestDirection;
+
+        // step 1: turn directions into weighted edge graph where weight = desirablility
+        // of possible move, weight (1 ... -1)
+
+        // step 2: weight graph including a 0 cost path to itself
+        // step 3: choose path of lowest cost
+        // will prioritize standing still over moving backwards
+
+        // obstacles:
+        // easy: prioritize radius
+        // hard?: weight moves by how clockwise they are (negative for backwards)
+        // "perpendicularity" of vector to ec and vector to move
+        // cross product
+
     }
 }

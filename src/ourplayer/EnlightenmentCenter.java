@@ -10,33 +10,41 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         // RobotType toBuild = RobotType.SLANDERER;
 
         // FIRST TIME
-        if (rc.getRoundNum() == 1) {
-            ArrayList<MapLocation> outerRing = new ArrayList<>();
+        
+        ArrayList<MapLocation> outerRing = new ArrayList<>();
 
-            MapLocation loc = rc.getLocation();
+        MapLocation loc = rc.getLocation();
 
-            for (int x = -5; x < 5; x++) {
-                for (int y = -5; y < 5; y++) {
+        for (int x = -6; x <= 6; x++) {
+            for (int y = -6; y <= 6; y++) {
 
-                    // if it is in the outer beltway
+                if (x * x + y * y <= 40 && x * x + y * y >= 32) {
+                    MapLocation thisLocation = new MapLocation(rc.getLocation().x+x, rc.getLocation().y+y);
 
-                    if (x * x + y * y <= 29 && x * x + y * y >= 25) {
-                        MapLocation thisLocation = new MapLocation(x, y);
-                        outerRing.add(thisLocation);
-                    }
+                    rc.setIndicatorDot(thisLocation, 50, 205, 50);
+                    // System.out.println("drawn dot at "+thisLocation);
+                    
                 }
             }
         }
+        
 
         int influence = rc.getInfluence();
 
         Direction dir = randomDirection();
-        if (rc.canBuildRobot(RobotType.SLANDERER, dir, influence)) {
-            rc.buildRobot(RobotType.SLANDERER, dir, influence);
+
+        if (rc.getRoundNum() == 1500){
+            rc.buildRobot(RobotType.POLITICIAN, dir, 50);
         }
+        
+        if (rc.canBuildRobot(RobotType.SLANDERER, dir, 50)) {
+            rc.buildRobot(RobotType.SLANDERER, dir, 50);
+        } 
+        
 
         if (rc.getRoundNum() % 50 == 0) {
             System.out.println("I have " + influence + " influence on round " + rc.getRoundNum());
         }
     }
+
 }
