@@ -163,12 +163,12 @@ public strictfp class RobotPlayer {
         double bestWeight = 0;
         Direction bestDirection = Direction.CENTER;
         for(Direction d : directions){
-            int newDx = dx + d.dx;
-            int newDy = dy + d.dy;
+            int newDx = dx - d.dx;
+            int newDy = dy - d.dy;
             if(Math.abs(newDx) + Math.abs(newDy) < Math.abs(dx) + Math.abs(dy) || Math.max(Math.abs(newDx), Math.abs(newDy)) < Math.max(Math.abs(dx), Math.abs(dy)) && rc.canMove(d)) {
-                System.out.println("legal direction" + d);
-                double crossProduct = (dx * d.dy - dy * d.dx) / (Math.sqrt(dx*dx + dy*dy) * Math.sqrt(d.dx*d.dx + d.dy*d.dy));
-                double weight = rc.sensePassability(me.add(d)) * (1 + crossProduct);
+                double dotProduct = (dx * d.dx + dy * d.dy) / (Math.sqrt(dx*dx + dy*dy) * Math.sqrt(d.dx*d.dx + d.dy*d.dy));
+                double weight = rc.sensePassability(me.add(d)) * (1 + dotProduct);
+                System.out.println("legal direction " + d + "has weight " + weight);
                 if(weight > bestWeight) {
                     bestWeight = weight;
                     bestDirection = d;
