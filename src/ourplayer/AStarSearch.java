@@ -5,14 +5,10 @@ import java.util.*;
 
 public strictfp class AStarSearch extends RobotPlayer {
 
-    private int stateSpace;
+    private static int[] neighborsOffset = {-12, 1, 14, 13, 12, -1, -14, -13};
 
-    // to avoid having to implement my own keyed priority queue,
-    // I did this
-    // this is bad !!!!!!
-    private HashMap<MapLocation, Integer> locToIdx;
+    private int stateSpace = 13 * 13;
     private MapLocation[] locs;
-    private int highestIdx = 0;
 
     private int[] gScores;
     private int[] fScores;
@@ -20,15 +16,23 @@ public strictfp class AStarSearch extends RobotPlayer {
     private boolean[] visited;
     private MapLocation source;
     private MapLocation target;
+    private int targetIdx;
+
+    private int locToIdx(MapLocation loc) {
+        return 13 * (loc.x - source.x + 6) + (loc.y - source.y + 6);
+    }
+
+    private MapLocation idxToLoc(int idx) {
+        return new MapLocation(source.x + idx / 13 - 6, source.y + idx % 13 - 6);
+    }
 
     public AStarSearch(MapLocation target) {
-        this.target = target;
         source = rc.getLocation();
-        int width = 2 * heuristics(source, target) + 1;
-        stateSpace = width * width * 2;
-        locToIdx = new HashMap<MapLocation, Integer>();
+
+        this.target = target;
+        targetIdx = locToIdx(target);
+
         locs = new MapLocation[stateSpace];
-        
         gScores = new int[stateSpace];
         fScores = new int[stateSpace];
         prev = new int[stateSpace];
@@ -40,8 +44,7 @@ public strictfp class AStarSearch extends RobotPlayer {
             prev[i] = Integer.MAX_VALUE;
         }
 
-        locs[highestIdx] = source;
-        locToIdx.put(source, highestIdx++);
+        locs[locToIdx(source)] = source;
         gScores[0] = 0;
         fScores[0] = 0;
     }
@@ -55,24 +58,33 @@ public strictfp class AStarSearch extends RobotPlayer {
             return fScores[i] > fScores[j] ? 1 : fScores[i] < fScores[j] ? -1 : 0;
         });
 
-        // put source into frontier
-        frontier.add(0);
+        frontier.add(locToIdx(source));
 
+        int counter = 0;
         while (!frontier.isEmpty()) {
+            System.out.printf("bytecode used at iteration %d of search loop: %d\n", counter++, Clock.getBytecodeNum());
+
             int current = frontier.poll();
-            if (locs[current] == target) {
-                System.out.println("found path");
+            rc.setIndicatorDot(idxToLoc(current), 0, 255, 0);  // visualization
+
+            if (current == targetIdx) {
+                System.out.println("found path!!!!!!!!!");
                 return reconstructPath(current);
             }
             visited[current] = true;
 
-            for (int neighbor: getNeighbors(locs[current])) {
+            int delta = -Clock.getBytecodeNum();
+            int[] neighbors = getNeighbors(locs[current]);
+            System.out.printf("bytecode used during getNeighbors: %d\n", delta + Clock.getBytecodeNum());
+
+            for (int neighbor : neighbors) {
                 if (visited[neighbor] || !rc.canSenseLocation(locs[neighbor])) continue;
 
                 double passability;
                 try {
                     passability = rc.sensePassability(locs[neighbor]);
                 } catch (GameActionException e) {
+                    System.out.println("EXCEPTION CAUGHT");
                     continue;
                 }
                 int tentativeGScore = gScores[current] + (int) (1 / passability);
@@ -111,15 +123,16 @@ public strictfp class AStarSearch extends RobotPlayer {
 
     private int[] getNeighbors(MapLocation center) {
         int[] res = new int[8];
+        int centerIdx = locToIdx(center);
         int i = 0;
-        for (Direction dir: directions) {
-            MapLocation neighbor = center.add(dir);
-            if (!locToIdx.containsKey(neighbor)) {
-                if (highestIdx >= stateSpace) continue;
-                locs[highestIdx] = neighbor;
-                locToIdx.put(neighbor, highestIdx++);
+
+        for (int offset: neighborsOffset) {
+            int neighborIdx = centerIdx + offset;
+            if (neighborIdx < 0 || neighborIdx >= stateSpace) continue;
+            if (locs[neighborIdx] == null) {
+                locs[neighborIdx] = idxToLoc(neighborIdx);
             }
-            res[i++] = locToIdx.get(neighbor);
+            res[i++] = neighborIdx;
         }
         return Arrays.copyOfRange(res, 0, i);
     }

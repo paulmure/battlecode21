@@ -247,7 +247,7 @@ public strictfp class RobotPlayer {
 
     }
 
-    protected Direction getBestExpand(ArrayList<Direction> possibleMoves, MapLocation spawnEC) {
+    /*protected Direction getBestExpand(ArrayList<Direction> possibleMoves, MapLocation spawnEC) {
         double bestWeight = 0
         Direction bestDirection = null;
         for(Direction d : possibleMoves) {
@@ -261,6 +261,6 @@ public strictfp class RobotPlayer {
 
             double weight = 
         }
-    }
+    }*/
 }
 
