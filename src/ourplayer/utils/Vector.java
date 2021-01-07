@@ -1,7 +1,7 @@
 package ourplayer.utils;
 
 public class Vector {
-    private int[] arr;
+    public int[] arr;
     public int size;
     public int cap;
 
@@ -9,10 +9,6 @@ public class Vector {
         this.arr = new int[cap];
         this.cap = cap;
         this.size = 0;
-    }
-
-    public int at(int i) {
-        return this.arr[i];
     }
 
     public void append(int elem) {

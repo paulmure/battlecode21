@@ -60,8 +60,8 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         //     influencePerTurn += i;
         // }
         /////////////////////////
-        if (rc.getRoundNum() == 500){
-            tryBuildRobot(RobotType.MUCKRAKER, dir, 50);
+        if (rc.getRoundNum() == 1){
+            tryBuildRobot(RobotType.MUCKRAKER, directions[5], 50);
         }
 
         if (rc.getRoundNum() % 50 == 0) {

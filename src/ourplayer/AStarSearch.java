@@ -55,28 +55,31 @@ public strictfp class AStarSearch extends RobotPlayer {
         return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
     }
 
-    public ArrayList<Direction> findPath() {
+    public ArrayList<Direction> findPath() throws GameActionException{
         Vector frontier = new Vector(stateSpace);
 
         frontier.append(locToIdx(source));
         inFrontier[locToIdx(source)] = true;
 
         int counter = 0;
-        int bytecode = Clock.getBytecodeNum();
 
         int current = 0;
         int currentIdx = 0;
         while (frontier.size > 0) {
+            int bytecodeBefore = Clock.getBytecodeNum();
 
-            current = frontier.at(0);
+            int bb = Clock.getBytecodeNum();
+            current = frontier.arr[0];
             currentIdx = 0;
             for (int i = 1; i < frontier.size; ++i) {
-                int j = frontier.at(i);
+                int j = frontier.arr[i];
                 if(fScores[j] < fScores[current]) {
                     current = j;
                     currentIdx = i;
                 }
             }
+            int _diff = Clock.getBytecodeNum() - bb;
+            System.out.printf("t h e l o o p t o o k    %d bytecode\n", _diff);
 
             if (current == targetIdx) {
                 System.out.println("found path!!!!!!!!!");
@@ -86,18 +89,14 @@ public strictfp class AStarSearch extends RobotPlayer {
             inFrontier[current] = false;
             frontier.remove(currentIdx);
 
-            int delta = Clock.getBytecodeNum();
             int[] neighbors = getNeighbors(locs[current]);
-            int diff = Clock.getBytecodeNum() - delta;
-            System.out.printf("bytecode used during getNeighbors: %d\n", diff);
 
-            int tentativeGScore;
-            try {
-                tentativeGScore = gScores[current] + (int) (1 / rc.sensePassability(locs[current]));
-            } catch (GameActionException e) {
-                System.out.println("EXCEPTION CAUGHT");
-                continue;
-            }
+            int tentativeGScore = gScores[current] + (int) (1 / rc.sensePassability(locs[current]));
+
+            int diff = Clock.getBytecodeNum() - bytecodeBefore;
+            System.out.printf("Iteration %d, bytecode used in first half: %d\n", counter, diff);
+
+            bytecodeBefore = Clock.getBytecodeNum();
 
             for (int neighbor : neighbors) {
                 if (visited[neighbor] || neighbor == -1 || !rc.canSenseLocation(locs[neighbor])) continue;
@@ -114,9 +113,9 @@ public strictfp class AStarSearch extends RobotPlayer {
                 }
             }
 
-            int currBytecode = Clock.getBytecodeNum();
-            System.out.printf("bytecode used at iteration %d of search loop: %d\n", counter++, currBytecode - bytecode);
-            bytecode = currBytecode;
+            diff = Clock.getBytecodeNum() - bytecodeBefore;
+            System.out.printf("Iteration %d, bytecode used in second half: %d\n", counter, diff);
+            ++counter;
         }
 
         return null;
@@ -143,9 +142,6 @@ public strictfp class AStarSearch extends RobotPlayer {
         int[] res = new int[8];
         int centerIdx = locToIdx(center);
 
-        // int counter = 0;
-        // int bytecode = Clock.getBytecodeNum();
-
         int offset;
         int neighborIdx;
 
@@ -161,10 +157,6 @@ public strictfp class AStarSearch extends RobotPlayer {
                 locs[neighborIdx] = center.add(directions[j]);
             } 
             res[j] = neighborIdx;
-
-            // int currBytecode = Clock.getBytecodeNum();
-            // System.out.printf("bytecode used at iteration %d of getNeighbors loop: %d\n", counter++, currBytecode - bytecode);
-            // bytecode = currBytecode;
         }
 
         return res;

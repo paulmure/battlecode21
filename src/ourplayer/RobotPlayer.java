@@ -152,6 +152,32 @@ public strictfp class RobotPlayer {
         return ((int) Math.sqrt(rc.getRoundNum())) / 5;
     }
 
+    //Scuffed greedy pathfinder that will do ok and not get stuck
+    protected Direction getRoughMoveTowards(MapLocation target) throws GameActionException{
+        MapLocation me = rc.getLocation();
+        if(target.isAdjacentTo(me)) {
+            return me.directionTo(target);
+        }
+        int dx = target.x - me.x;
+        int dy = target.y - me.y;
+        double bestWeight = 0;
+        Direction bestDirection = Direction.CENTER;
+        for(Direction d : directions){
+            int newDx = dx + d.dx;
+            int newDy = dy + d.dy;
+            if(Math.abs(newDx) + Math.abs(newDy) < Math.abs(dx) + Math.abs(dy) || Math.max(Math.abs(newDx), Math.abs(newDy)) < Math.max(Math.abs(dx), Math.abs(dy)) && rc.canMove(d)) {
+                System.out.println("legal direction" + d);
+                double crossProduct = (dx * d.dy - dy * d.dx) / (Math.sqrt(dx*dx + dy*dy) * Math.sqrt(d.dx*d.dx + d.dy*d.dy));
+                double weight = rc.sensePassability(me.add(d)) * (1 + crossProduct);
+                if(weight > bestWeight) {
+                    bestWeight = weight;
+                    bestDirection = d;
+                }
+            }
+        }
+        return bestDirection;
+    }
+
     protected boolean isOnHwy(MapLocation check, MapLocation ec){
         // y = x 
         // line defines northeast and southwest hwy
