@@ -1,6 +1,7 @@
 package ourplayer;
 
 import battlecode.common.*;
+import java.util.ArrayList;
 
 interface RoleController {
     public void run() throws GameActionException;
@@ -29,12 +30,14 @@ public strictfp class RobotPlayer {
         RobotPlayer.rc = rc;
 
         RoleController controller;
-
+        
         switch (rc.getType()) {
             case ENLIGHTENMENT_CENTER:
                 controller = new EnlightenmentCenter();
                 break;
             case POLITICIAN:
+                // System.out.println("Initializing politician from here for some reason");
+                // System.out.println("LOC: "+ rc.getLocation());
                 controller = new Politician();
                 break;
             case MUCKRAKER:
@@ -49,11 +52,41 @@ public strictfp class RobotPlayer {
 
         turnCount = 0;
 
+        RobotType lastRoundType = rc.getType();
         // System.out.println("I'm a " + rc.getType() + " and I just got created!");
         while (true) {
             ++turnCount;
+            
             // Try/catch blocks stop unhandled exceptions, which cause your robot to freeze
             try {
+                // verify that type has not changed
+                if (rc.getType() != lastRoundType){
+
+                    switch (rc.getType()) {
+                        case ENLIGHTENMENT_CENTER:
+                            controller = new EnlightenmentCenter();
+                            break;
+                        case POLITICIAN:
+                            if(controller instanceof Slanderer){
+                                // System.out.println("passing ec info: " + ((Slanderer) controller).getSpawnEc());
+                                controller = new Politician(((Slanderer) controller).getSpawnEc(), ((Slanderer) controller).getSpawnEcId());
+                            } else {
+                                // System.out.println("Controller was not Instance of Slanderer. was "+controller);
+                                controller = new Politician();
+                            }
+                            break;
+                        case MUCKRAKER:
+                            controller = new Muckracker();
+                            break;
+                        case SLANDERER:
+                            controller = new Slanderer();
+                            break;
+                        default:
+                            controller = null;
+                            break;
+                    }
+
+                }
                 // Here, we've separated the controls into a different method for each
                 // RobotType.
                 // You may rewrite this into your own control structure if you wish.
@@ -61,6 +94,7 @@ public strictfp class RobotPlayer {
                 controller.run();
                 // Clock.yield() makes the robot wait until the next turn, then it will perform
                 // this loop again
+                lastRoundType = rc.getType();
                 Clock.yield();
 
             } catch (Exception e) {
@@ -104,4 +138,129 @@ public strictfp class RobotPlayer {
         } else
             return false;
     }
+
+    static boolean tryBuildRobot(RobotType type, Direction dir, int influence) throws GameActionException{
+        if(rc.canBuildRobot(type, dir, influence)) {
+            rc.buildRobot(type, dir, influence);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    int getECIncome() {
+        return ((int) Math.sqrt(rc.getRoundNum())) / 5;
+    }
+
+    protected boolean isOnHwy(MapLocation check, MapLocation ec){
+        // y = x 
+        // line defines northeast and southwest hwy
+        if (check.x - ec.x == check.y - ec.y){
+            return true;
+        }
+        return false;
+    };
+
+    protected ArrayList<Direction> getPossibleMoves(){
+        return getPossibleMoves(true, null);
+    }
+
+    protected ArrayList<Direction> getPossibleMoves(boolean highwayEnab, MapLocation ec) {
+        ArrayList<Direction> possibleMoves = new ArrayList<>();
+        for (Direction d : Direction.values()) {
+            if (rc.canMove(d)) {
+                if(!highwayEnab){
+                    if(!isOnHwy(new MapLocation(rc.getLocation().x + d.dx, rc.getLocation().y + d.dy), ec)){
+                        possibleMoves.add(d);
+                    }
+                }else{
+                    possibleMoves.add(d);
+                }
+            }
+        }
+        return possibleMoves;
+    }
+    
+    // Get best possible move to form a vortex
+    // currently implements a switch back and forth in 
+    // the direction of rotation, from widdershins to deisul
+    protected Direction getBestVortex(ArrayList<Direction> possibleMoves, MapLocation spawnEC, double targetRadius, double standingWeight) {
+        // ~~~~~~~~ MODIFY THESE TO CHANGE PRIORITIZATION ~~~~~~~~~//
+        // double kRadius = 0.5f;
+        // double kClockwise = 0.5f;
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+
+        
+        // System.out.println("spawnEC: "+spawnEC);
+        int ecVecX = rc.getLocation().x - spawnEC.x;
+        int ecVecY = rc.getLocation().y - spawnEC.y;
+        double ecVecLength = Math.sqrt(ecVecX * ecVecX + ecVecY * ecVecY);
+
+        int targetVecX = 0;
+        int targetVecY = 0;
+        double targetVecLength = 1;
+        // a standing weight of 1 treats standing still as a perfectly perpendicular move, 0 is a perfectly parallel
+        double bestWeight = standingWeight / (1 + (Math.abs(targetRadius-(ecVecX * ecVecX + ecVecY * ecVecY))));
+        Direction bestDirection = null;
+
+        for (Direction d : possibleMoves) {
+            
+            // System.out.println("DIRECTION: "+d);
+            // System.out.println("targetX: " + targetVecX + " dx: " + d.dx);
+            // System.out.println("targetY: " + targetVecY + " dy: " + d.dy);
+            targetVecX = d.dx;
+            targetVecY = d.dy;
+            targetVecLength = Math.sqrt(targetVecX * targetVecX + targetVecY * targetVecY);
+
+            // to calculate r^2 to given move, use the current pos (ecVec) and add the
+            // move's vector (targetVec), then r^2 it
+            int moveR2 = (int) (Math.pow(ecVecX + targetVecX, 2) + Math.pow(ecVecY + targetVecY, 2));
+            double deltaR2 = Math.abs(targetRadius - moveR2);
+            // equation here for adjustment :
+            // y = 1 / (ax + 1)
+            // adjust a to produce steeper or smoother down
+            double r2Weight = 1 / (1 + deltaR2); // (0, 1]
+            
+            double crossProduct = (rc.getRoundNum()%420 < 210 ? 1 : -1)*(ecVecX * targetVecY - ecVecY * targetVecX) / (ecVecLength * targetVecLength); // (-1, 1)
+
+            double totalWeight = r2Weight * crossProduct;
+
+            if (totalWeight > bestWeight) {
+                bestWeight = totalWeight;
+                bestDirection = d;
+            }
+        }
+        return bestDirection;
+
+        // step 1: turn directions into weighted edge graph where weight = desirablility
+        // of possible move, weight (1 ... -1)
+
+        // step 2: weight graph including a 0 cost path to itself
+        // step 3: choose path of lowest cost
+        // will prioritize standing still over moving backwards
+
+        // obstacles:
+        // easy: prioritize radius
+        // hard?: weight moves by how clockwise they are (negative for backwards)
+        // "perpendicularity" of vector to ec and vector to move
+        // cross product
+
+    }
+
+    protected Direction getBestExpand(ArrayList<Direction> possibleMoves, MapLocation spawnEC) {
+        double bestWeight = 0
+        Direction bestDirection = null;
+        for(Direction d : possibleMoves) {
+            targetVecX = d.dx;
+            targetVecY = d.dy;
+
+            // to calculate r^2 to given move, use the current pos (ecVec) and add the
+            // move's vector (targetVec), then r^2 it
+            int moveR2 = (int) (Math.pow(ecVecX + targetVecX, 2) + Math.pow(ecVecY + targetVecY, 2));
+            double deltaR2 = Math.abs(targetRadius - moveR2);
+
+            double weight = 
+        }
+    }
 }
+
