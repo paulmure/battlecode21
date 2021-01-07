@@ -247,20 +247,20 @@ public strictfp class RobotPlayer {
 
     }
 
-    protected Direction getBestExpand(ArrayList<Direction> possibleMoves, MapLocation spawnEC) {
-        double bestWeight = 0
-        Direction bestDirection = null;
-        for(Direction d : possibleMoves) {
-            targetVecX = d.dx;
-            targetVecY = d.dy;
+    // protected Direction getBestExpand(ArrayList<Direction> possibleMoves, MapLocation spawnEC) {
+    //     double bestWeight = 0
+    //     Direction bestDirection = null;
+    //     for(Direction d : possibleMoves) {
+    //         targetVecX = d.dx;
+    //         targetVecY = d.dy;
 
-            // to calculate r^2 to given move, use the current pos (ecVec) and add the
-            // move's vector (targetVec), then r^2 it
-            int moveR2 = (int) (Math.pow(ecVecX + targetVecX, 2) + Math.pow(ecVecY + targetVecY, 2));
-            double deltaR2 = Math.abs(targetRadius - moveR2);
+    //         // to calculate r^2 to given move, use the current pos (ecVec) and add the
+    //         // move's vector (targetVec), then r^2 it
+    //         int moveR2 = (int) (Math.pow(ecVecX + targetVecX, 2) + Math.pow(ecVecY + targetVecY, 2));
+    //         double deltaR2 = Math.abs(targetRadius - moveR2);
 
-            double weight = 
-        }
-    }
+    //         double weight = 
+    //     }
+    // }
 }
 
