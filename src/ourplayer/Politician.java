@@ -20,7 +20,7 @@ public class Politician extends RobotPlayer implements RoleController {
         spawnEC = ec;
 
         spawnECid = ecID;
-        System.out.println("joe mama: " + ec);
+        // System.out.println("joe mama: " + ec);
     }
 
     private void runFirstTurn() {
@@ -38,10 +38,12 @@ public class Politician extends RobotPlayer implements RoleController {
                     spawnECid = nearby[i].ID;
                 }
             }
-            System.out.println("Initialized Politician, ID: "+rc.getID()+" EC: "+spawnEC);
+            // System.out.println("Initialized Politician, ID: "+rc.getID()+" EC: "+spawnEC);
+            
 
         } else {
-            System.out.println("Initialized Politician from Slanderer. ID: "+rc.getID()+" EC: "+ spawnEC);
+            // System.out.println("Initialized Politician from Slanderer. ID: "+rc.getID()+" EC: "+ spawnEC);
+            
         }
 
     }
@@ -54,14 +56,18 @@ public class Politician extends RobotPlayer implements RoleController {
 
         Direction bestMove = null;
         if(spawnEC != null){
-            bestMove = getBest(getPossibleMoves(), spawnEC, targetRadius, 0.65);
+            if(rc.getRoundNum() < 250){
+                bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, 2*targetRadius/3.0, 0.0);
+            }else{
+                bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, targetRadius, 0.65);
+            }
         }
 
         if (bestMove != null) {
             tryMove(bestMove);
         }
 
-        if (age == 250){
+        if (age >= 250){
             if(rc.canEmpower(1)){
                 rc.empower(1);
             }

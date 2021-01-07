@@ -33,7 +33,7 @@ public class Slanderer extends RobotPlayer implements RoleController {
             runFirstTurn();
         }
 
-        Direction bestMove = getBest(getPossibleMoves(), spawnEC, calculateTargetRadius2(), 0.0);
+        Direction bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, calculateTargetRadius2(), 0.0);
         if (bestMove != null) {
             tryMove(bestMove);
         }
