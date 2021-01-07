@@ -11,7 +11,7 @@ public class Politician extends RobotPlayer implements RoleController {
 
     public Politician() {
         age = 0;
-        targetRadius = 65;
+        targetRadius = 80;
     }
 
     public Politician(MapLocation ec, int ecID) {
@@ -57,8 +57,9 @@ public class Politician extends RobotPlayer implements RoleController {
         Direction bestMove = null;
         if(spawnEC != null){
             if(rc.getRoundNum() < 250){
-                bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, 2*targetRadius/3.0, 0.0);
+                bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, targetRadius/2.0, 0.0);
             }else{
+                //0.65 is roughly 2 thick
                 bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, targetRadius, 0.65);
             }
         }
