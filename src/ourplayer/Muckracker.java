@@ -6,7 +6,7 @@ public class Muckracker extends RobotPlayer implements RoleController {
 
     public void run() throws GameActionException {
         MapLocation loc = rc.getLocation();
-        MapLocation newLoc = new MapLocation(loc.x + 2, loc.y + 2);
+        MapLocation newLoc = new MapLocation(loc.x + 5, loc.y + 2);
         System.out.printf("bytecode used before initializing AStarSearch object: %d\n", Clock.getBytecodeNum());
         AStarSearch aStar = new AStarSearch(newLoc);
         System.out.printf("bytecode used after initializing AStarSearch object: %d\n", Clock.getBytecodeNum());

@@ -16,6 +16,7 @@ public strictfp class AStarSearch extends RobotPlayer {
     private boolean[] visited;
     private MapLocation source;
     private MapLocation target;
+    private int sourceIdx = 84;
     private int targetIdx;
 
     private int locToIdx(MapLocation loc) {
@@ -65,7 +66,6 @@ public strictfp class AStarSearch extends RobotPlayer {
             System.out.printf("bytecode used at iteration %d of search loop: %d\n", counter++, Clock.getBytecodeNum());
 
             int current = frontier.poll();
-            rc.setIndicatorDot(idxToLoc(current), 0, 255, 0);  // visualization
 
             if (current == targetIdx) {
                 System.out.println("found path!!!!!!!!!");
@@ -77,17 +77,17 @@ public strictfp class AStarSearch extends RobotPlayer {
             int[] neighbors = getNeighbors(locs[current]);
             System.out.printf("bytecode used during getNeighbors: %d\n", delta + Clock.getBytecodeNum());
 
+            int tentativeGScore;
+            try {
+                tentativeGScore = gScores[current] + (int) (1 / rc.sensePassability(locs[current]));
+            } catch (GameActionException e) {
+                System.out.println("EXCEPTION CAUGHT");
+                continue;
+            }
+
             for (int neighbor : neighbors) {
                 if (visited[neighbor] || !rc.canSenseLocation(locs[neighbor])) continue;
 
-                double passability;
-                try {
-                    passability = rc.sensePassability(locs[neighbor]);
-                } catch (GameActionException e) {
-                    System.out.println("EXCEPTION CAUGHT");
-                    continue;
-                }
-                int tentativeGScore = gScores[current] + (int) (1 / passability);
                 if (tentativeGScore < gScores[neighbor]) {
                     gScores[neighbor] = tentativeGScore;
                     fScores[neighbor] = gScores[neighbor] + heuristics(locs[neighbor], target);
@@ -108,10 +108,10 @@ public strictfp class AStarSearch extends RobotPlayer {
         System.out.println("reconstructing path");
         ArrayList<Direction> res = new ArrayList<Direction>(stateSpace / 4);
         MapLocation currentLoc = locs[currentIdx];
-        while (currentIdx != 0) {
-            // this is bad
+        while (currentIdx != sourceIdx) {
             rc.setIndicatorDot(currentLoc, 0, 255, 0);
             int prevIdx = prev[currentIdx];
+            System.out.printf("currentIdx = %d, prevIdx = %d, targetIdx = %d\n", currentIdx, prevIdx, targetIdx);
             MapLocation prevLoc = locs[prevIdx];
             res.add(0, prevLoc.directionTo(currentLoc));
             currentIdx = prevIdx;
