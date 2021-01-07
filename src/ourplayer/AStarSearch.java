@@ -2,6 +2,7 @@ package ourplayer;
 
 import battlecode.common.*;
 import java.util.*;
+import ourplayer.utils.Vector;
 
 public strictfp class AStarSearch extends RobotPlayer {
 
@@ -14,6 +15,7 @@ public strictfp class AStarSearch extends RobotPlayer {
     private int[] fScores;
     private int[] prev;
     private boolean[] visited;
+    private boolean[] inFrontier;
     private MapLocation source;
     private MapLocation target;
     private int sourceIdx = 84;
@@ -38,6 +40,7 @@ public strictfp class AStarSearch extends RobotPlayer {
         fScores = new int[stateSpace];
         prev = new int[stateSpace];
         visited = new boolean[stateSpace];
+        inFrontier = new boolean[stateSpace];
 
         for (int i = 1; i < stateSpace; ++i) {
             gScores[i] = Integer.MAX_VALUE;
@@ -55,23 +58,35 @@ public strictfp class AStarSearch extends RobotPlayer {
     }
 
     public ArrayList<Direction> findPath() {
-        PriorityQueue<Integer> frontier = new PriorityQueue<Integer>((i, j) -> {
-            return fScores[i] > fScores[j] ? 1 : fScores[i] < fScores[j] ? -1 : 0;
-        });
+        Vector frontier = new Vector(stateSpace);
 
-        frontier.add(locToIdx(source));
+        frontier.append(locToIdx(source));
+        inFrontier[locToIdx(source)] = true;
 
         int counter = 0;
-        while (!frontier.isEmpty()) {
-            System.out.printf("bytecode used at iteration %d of search loop: %d\n", counter++, Clock.getBytecodeNum());
+        int bytecode = Clock.getBytecodeNum();
 
-            int current = frontier.poll();
+        int current = 0;
+        int currentIdx = 0;
+        while (frontier.size > 0) {
+
+            current = frontier.at(0);
+            currentIdx = 0;
+            for (int i = 1; i < frontier.size; ++i) {
+                int j = frontier.at(i);
+                if(fScores[j] < fScores[current]) {
+                    current = j;
+                    currentIdx = i;
+                }
+            }
 
             if (current == targetIdx) {
                 System.out.println("found path!!!!!!!!!");
                 return reconstructPath(current);
             }
             visited[current] = true;
+            inFrontier[current] = false;
+            frontier.remove(currentIdx);
 
             int delta = -Clock.getBytecodeNum();
             int[] neighbors = getNeighbors(locs[current]);
@@ -86,19 +101,23 @@ public strictfp class AStarSearch extends RobotPlayer {
             }
 
             for (int neighbor : neighbors) {
-                if (visited[neighbor] || !rc.canSenseLocation(locs[neighbor])) continue;
+                if (visited[neighbor] || neighbor == -1 || !rc.canSenseLocation(locs[neighbor])) continue;
 
                 if (tentativeGScore < gScores[neighbor]) {
                     gScores[neighbor] = tentativeGScore;
                     fScores[neighbor] = gScores[neighbor] + heuristics(locs[neighbor], target);
                     prev[neighbor] = current;
                     
-                    if (frontier.contains(neighbor)) {
-                        frontier.remove(neighbor);
+                    if (!inFrontier[neighbor]) {
+                        frontier.append(neighbor);
+                        inFrontier[neighbor] = true;
                     }
-                    frontier.add(neighbor);
                 }
             }
+
+            int currBytecode = Clock.getBytecodeNum();
+            System.out.printf("bytecode used at iteration %d of search loop: %d\n", counter++, currBytecode - bytecode);
+            bytecode = currBytecode;
         }
 
         return null;
@@ -124,17 +143,30 @@ public strictfp class AStarSearch extends RobotPlayer {
     private int[] getNeighbors(MapLocation center) {
         int[] res = new int[8];
         int centerIdx = locToIdx(center);
-        int i = 0;
 
-        for (int offset: neighborsOffset) {
+        int counter = 0;
+        int bytecode = Clock.getBytecodeNum();
+
+        for (int j = 0; j < 8; ++j) {
+            int offset = neighborsOffset[j];
             int neighborIdx = centerIdx + offset;
-            if (neighborIdx < 0 || neighborIdx >= stateSpace) continue;
-            if (locs[neighborIdx] == null) {
-                locs[neighborIdx] = idxToLoc(neighborIdx);
+            if (neighborIdx < 0 || neighborIdx >= stateSpace) {
+                res[j] = -1;
+                continue;
             }
-            res[i++] = neighborIdx;
+            if (locs[neighborIdx] == null) {
+                int bBefore = Clock.getBytecodeNum();
+                locs[neighborIdx] = idxToLoc(neighborIdx);
+                System.out.printf("Bytecode used at idxToLoc call: %d\n", Clock.getBytecodeNum() - bBefore);
+            } 
+            res[j] = neighborIdx;
+
+            int currBytecode = Clock.getBytecodeNum();
+            System.out.printf("bytecode used at iteration %d of getNeighbors loop: %d\n", counter++, currBytecode - bytecode);
+            bytecode = currBytecode;
         }
-        return Arrays.copyOfRange(res, 0, i);
+
+        return res;
     }
 
 }

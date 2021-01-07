@@ -2,6 +2,7 @@ dist/*
 build/*
 src/lectureplayer
 
+/.vscode
 /matches
 /deploy/lib
 /deploy/bin
