@@ -6,9 +6,11 @@ import ourplayer.utils.Vector;
 
 public strictfp class AStarSearch extends RobotPlayer {
 
-    private static int[] neighborsOffset = {-12, 1, 14, 13, 12, -1, -14, -13};
+    private static final int[] neighborsOffset = { 1, 14, 13, 12, -1, -14, -13, -12 };
+    private static final Direction[] directions = { Direction.NORTH, Direction.NORTHEAST, Direction.EAST, Direction.SOUTHEAST,
+            Direction.SOUTH, Direction.SOUTHWEST, Direction.WEST, Direction.NORTHWEST, };
 
-    private int stateSpace = 13 * 13;
+    private final int stateSpace = 13 * 13;
     private MapLocation[] locs;
 
     private int[] gScores;
@@ -16,17 +18,13 @@ public strictfp class AStarSearch extends RobotPlayer {
     private int[] prev;
     private boolean[] visited;
     private boolean[] inFrontier;
-    private MapLocation source;
-    private MapLocation target;
-    private int sourceIdx = 84;
-    private int targetIdx;
+    private final MapLocation source;
+    private final MapLocation target;
+    private final int sourceIdx = 84;
+    private final int targetIdx;
 
     private int locToIdx(MapLocation loc) {
         return 13 * (loc.x - source.x + 6) + (loc.y - source.y + 6);
-    }
-
-    private MapLocation idxToLoc(int idx) {
-        return new MapLocation(source.x + idx / 13 - 6, source.y + idx % 13 - 6);
     }
 
     public AStarSearch(MapLocation target) {
@@ -88,9 +86,10 @@ public strictfp class AStarSearch extends RobotPlayer {
             inFrontier[current] = false;
             frontier.remove(currentIdx);
 
-            int delta = -Clock.getBytecodeNum();
+            int delta = Clock.getBytecodeNum();
             int[] neighbors = getNeighbors(locs[current]);
-            System.out.printf("bytecode used during getNeighbors: %d\n", delta + Clock.getBytecodeNum());
+            int diff = Clock.getBytecodeNum() - delta;
+            System.out.printf("bytecode used during getNeighbors: %d\n", diff);
 
             int tentativeGScore;
             try {
@@ -144,26 +143,28 @@ public strictfp class AStarSearch extends RobotPlayer {
         int[] res = new int[8];
         int centerIdx = locToIdx(center);
 
-        int counter = 0;
-        int bytecode = Clock.getBytecodeNum();
+        // int counter = 0;
+        // int bytecode = Clock.getBytecodeNum();
+
+        int offset;
+        int neighborIdx;
 
         for (int j = 0; j < 8; ++j) {
-            int offset = neighborsOffset[j];
-            int neighborIdx = centerIdx + offset;
+            offset = neighborsOffset[j];
+            neighborIdx = centerIdx + offset;
+
             if (neighborIdx < 0 || neighborIdx >= stateSpace) {
                 res[j] = -1;
                 continue;
             }
             if (locs[neighborIdx] == null) {
-                int bBefore = Clock.getBytecodeNum();
-                locs[neighborIdx] = idxToLoc(neighborIdx);
-                System.out.printf("Bytecode used at idxToLoc call: %d\n", Clock.getBytecodeNum() - bBefore);
+                locs[neighborIdx] = center.add(directions[j]);
             } 
             res[j] = neighborIdx;
 
-            int currBytecode = Clock.getBytecodeNum();
-            System.out.printf("bytecode used at iteration %d of getNeighbors loop: %d\n", counter++, currBytecode - bytecode);
-            bytecode = currBytecode;
+            // int currBytecode = Clock.getBytecodeNum();
+            // System.out.printf("bytecode used at iteration %d of getNeighbors loop: %d\n", counter++, currBytecode - bytecode);
+            // bytecode = currBytecode;
         }
 
         return res;
