@@ -37,12 +37,12 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
 
         Direction dir = randomDirection();
         for(int i = 0; i < 8; i++){
-            if (rc.getRoundNum() < 300 && rc.getRoundNum() % 5 == 0){
-                if(tryBuildRobot(RobotType.POLITICIAN, dir, 50)){
+            if (rc.getRoundNum() < 300 && rc.getRoundNum() % 3 == 0){
+                if(tryBuildRobot(RobotType.POLITICIAN, dir, 75)){
                     break;
                 }
             } else {
-                if(tryBuildRobot(RobotType.SLANDERER, dir, 50)){
+                if(tryBuildRobot(RobotType.SLANDERER, dir, influence - influence% 20)){
                     activeSlanderers.add(50 / 20);
                     if(activeSlanderers.size() > 50) {
                         activeSlanderers.poll();
@@ -57,7 +57,9 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         for(Integer i : activeSlanderers) {
             influencePerTurn += i;
         }
-
+        if (influence + influencePerTurn > Integer.MAX_VALUE - 500000000){
+            rc.bid(influencePerTurn);
+        }
         if (rc.getRoundNum() % 50 == 0) {
             System.out.println("I have " + influence + " influence on round " + rc.getRoundNum());
         }

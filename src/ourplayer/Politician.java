@@ -11,7 +11,7 @@ public class Politician extends RobotPlayer implements RoleController {
 
     public Politician() {
         age = 0;
-        targetRadius = 80;
+        targetRadius = 60;
     }
 
     public Politician(MapLocation ec, int ecID) {
@@ -48,6 +48,18 @@ public class Politician extends RobotPlayer implements RoleController {
 
     }
 
+    private boolean nearbyEnemy(){
+        Team enemy = rc.getTeam().opponent();
+
+        // change radius
+        int actionRadius = rc.getType().actionRadiusSquared;
+        RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
+        if (attackable.length != 0 && rc.canEmpower(actionRadius)) {
+            return true;
+        }
+        return false;
+    }
+
     public void run() throws GameActionException {
 
         if (age == 0){
@@ -68,11 +80,18 @@ public class Politician extends RobotPlayer implements RoleController {
             tryMove(bestMove);
         }
 
-        if (age >= 250){
-            if(rc.canEmpower(1)){
-                rc.empower(1);
-            }
+
+        // detects if enemy is nearby
+        if(nearbyEnemy()){
+            rc.empower(rc.getType().actionRadiusSquared);
         }
+
+        // if (age >= 250){
+        //     if (Math.random() > 0.4 && rc.canEmpower(1)){
+        //         rc.empower(1);
+        //     }
+            
+        // }
         age++;
 
     }
