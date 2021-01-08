@@ -61,7 +61,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         // }
         /////////////////////////
         if (rc.getRoundNum() == 1){
-            tryBuildRobot(RobotType.MUCKRAKER, directions[5], 50);
+            tryBuildRobot(RobotType.MUCKRAKER, directions[1], 50);
         }
 
         if (rc.getRoundNum() % 50 == 0) {
