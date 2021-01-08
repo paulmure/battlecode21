@@ -10,23 +10,31 @@ from tqdm import tqdm
 
 FIRST_LOWBALL_BID = 50
 
-LOWBALL_INCREMENT = 1
+LOWBALL_INCREMENT = 5
 
 PASSABILITY = 1
 
 SURPLUS = 551
 
+BID_ALL_AFTER_ROUND = 1400
+
 ROUNDS = int(argv[1])
+
+bid_mod = 4
 
 wacky_bids = []
 
+num_rounds_lost = 0
+num_rounds_won = 0
 
 BidOutcome = namedtuple('BidOutcome', ['price', 'outcome'])
 BidderState = namedtuple('BidderState', ['current_influence', 'past_bidding_outcomes'])
 
 def lowball_bid(state : BidderState) -> int:
+    global num_rounds_lost
+    global num_rounds_won
     bid = 0
-
+    
     if not state.past_bidding_outcomes:
         bid = FIRST_LOWBALL_BID
     else:
@@ -37,26 +45,45 @@ def lowball_bid(state : BidderState) -> int:
         if last_bid.outcome == 'won':
             if bid > 1:
                 bid -= 1
+            num_rounds_won += 1
+            num_rounds_lost = 0
         else:
             # we lost last bid
             # increment the price based on how many rounds we lost in a row
-            num_rounds_lost = 0
-            i = len(state.past_bidding_outcomes) - 1
-
-            while i >= 0 and state.past_bidding_outcomes[i].outcome == 'lost':
-                num_rounds_lost += 1
-                i -= 1
-            
+            num_rounds_lost += 1
+            num_rounds_won = 0
+            # print("we've lost:")
+            # print(num_rounds_lost)
             bid += LOWBALL_INCREMENT * num_rounds_lost
     
     return min(bid, state.current_influence)
     
+def bid_all_at_round(state: BidderState) -> int:
 
+    global BID_ALL_AFTER_ROUND
+    round_num = BID_ALL_AFTER_ROUND
+    r = len(state.past_bidding_outcomes)
+    bid = 0
+
+    curr_inf = state.current_influence
+    if r == round_num:
+        print("BIDDING ALL NOW")
+    if r >= round_num:
+        bid = math.floor((SURPLUS * (PASSABILITY/2)) * 1.5)
+    
+    return min(state.current_influence, bid)
 
 def other_bid(state : BidderState) -> int:
     # the other bid
-    desired_bid = math.floor(np.random.normal(state.current_influence-500, 500))
+    r = len(state.past_bidding_outcomes)
+    global bid_mod
+    bid_mean = state.current_influence-np.random.normal(250, 50)
+    desired_bid = math.floor(bid_mean)
     desired_bid = max(1, desired_bid)
+    if desired_bid > state.current_influence:
+        print(desired_bid)
+        print("exceeded max bid!")
+        bid_mod *= 2
     return min(state.current_influence, desired_bid)
 
 
@@ -142,7 +169,7 @@ def run_economy(player_1: Callable[[BidderState], int], player_2: Callable[[Bidd
 
 def plot_bid(past_outcomes : List[BidOutcome], color : str, alpha=1):
     bid_prices = [entry.price for entry in past_outcomes]
-    pp.plot(bid_prices[-100:], color=color, alpha=alpha)
+    pp.plot(bid_prices, color=color, alpha=alpha)
     # ax = pp.gca()
     # ax.set_yscale('ax')
 
@@ -181,7 +208,7 @@ def run_multiple(num_games):
     
 
 if __name__ == "__main__":
-    print(run_economy(lowball_bid, bid_half_of_income))
+    print(run_economy(lowball_bid, bid_all_at_round), "won")
     # adjustment_agent()
     pp.show()
     # pp.clf()
