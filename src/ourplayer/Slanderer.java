@@ -21,11 +21,14 @@ public class Slanderer extends RobotPlayer implements RoleController {
     }
 
     private double endRadius2;
+    private double beginRadius2;
 
     public Slanderer() {
         age = 0;
         // change this to change outer radius^2
         endRadius2 = 35;
+        // change this to change the inner radius^2
+        beginRadius2 = 4;
     }
 
     public void run() throws GameActionException {
@@ -58,7 +61,8 @@ public class Slanderer extends RobotPlayer implements RoleController {
         //         }
         //     }
         // }
-        return ((double) age * endRadius2) / 300;
+        // return ((double) age * endRadius2) / 300;
+        return (((double) endRadius2 - beginRadius2)/300 * age) + beginRadius2;
     }
 
     private void runFirstTurn() {
