@@ -21,11 +21,4 @@ public class Vector {
         }
         this.size--;
     }
-
-    // public boolean contains(int elem) {
-    //     for (int i = 0; i < size; ++i) {
-    //         if (arr[i] == elem) return true;
-    //     }
-    //     return false;
-    // }
 }

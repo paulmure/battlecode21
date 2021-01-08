@@ -23,7 +23,7 @@ public strictfp class AStarSearch extends RobotPlayer {
     private final int sourceIdx = 84;
     private final int targetIdx;
 
-    private int locToIdx(MapLocation loc) {
+    private final int locToIdx(MapLocation loc) {
         return 13 * (loc.x - source.x + 6) + (loc.y - source.y + 6);
     }
 
@@ -51,7 +51,7 @@ public strictfp class AStarSearch extends RobotPlayer {
         fScores[0] = 0;
     }
 
-    private static int heuristics(MapLocation a, MapLocation b) {
+    private final static int heuristics(MapLocation a, MapLocation b) {
         return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
     }
 
@@ -61,14 +61,11 @@ public strictfp class AStarSearch extends RobotPlayer {
         frontier.append(locToIdx(source));
         inFrontier[locToIdx(source)] = true;
 
-        int counter = 0;
 
         int current = 0;
         int currentIdx = 0;
         while (frontier.size > 0) {
-            int bytecodeBefore = Clock.getBytecodeNum();
 
-            int bb = Clock.getBytecodeNum();
             current = frontier.arr[0];
             currentIdx = 0;
             for (int i = 1; i < frontier.size; ++i) {
@@ -78,11 +75,8 @@ public strictfp class AStarSearch extends RobotPlayer {
                     currentIdx = i;
                 }
             }
-            int _diff = Clock.getBytecodeNum() - bb;
-            System.out.printf("t h e l o o p t o o k    %d bytecode\n", _diff);
 
             if (current == targetIdx) {
-                System.out.println("found path!!!!!!!!!");
                 return reconstructPath(current);
             }
             visited[current] = true;
@@ -92,11 +86,6 @@ public strictfp class AStarSearch extends RobotPlayer {
             int[] neighbors = getNeighbors(locs[current]);
 
             int tentativeGScore = gScores[current] + (int) (1 / rc.sensePassability(locs[current]));
-
-            int diff = Clock.getBytecodeNum() - bytecodeBefore;
-            System.out.printf("Iteration %d, bytecode used in first half: %d\n", counter, diff);
-
-            bytecodeBefore = Clock.getBytecodeNum();
 
             for (int neighbor : neighbors) {
                 if (visited[neighbor] || neighbor == -1 || !rc.canSenseLocation(locs[neighbor])) continue;
@@ -112,23 +101,16 @@ public strictfp class AStarSearch extends RobotPlayer {
                     }
                 }
             }
-
-            diff = Clock.getBytecodeNum() - bytecodeBefore;
-            System.out.printf("Iteration %d, bytecode used in second half: %d\n", counter, diff);
-            ++counter;
         }
 
         return null;
     }
 
-    private ArrayList<Direction> reconstructPath(int currentIdx) {
-        System.out.println("reconstructing path");
+    private final ArrayList<Direction> reconstructPath(int currentIdx) {
         ArrayList<Direction> res = new ArrayList<Direction>(stateSpace / 4);
         MapLocation currentLoc = locs[currentIdx];
         while (currentIdx != sourceIdx) {
-            rc.setIndicatorDot(currentLoc, 0, 255, 0);
             int prevIdx = prev[currentIdx];
-            System.out.printf("currentIdx = %d, prevIdx = %d, targetIdx = %d\n", currentIdx, prevIdx, targetIdx);
             MapLocation prevLoc = locs[prevIdx];
             res.add(0, prevLoc.directionTo(currentLoc));
             currentIdx = prevIdx;
@@ -138,7 +120,7 @@ public strictfp class AStarSearch extends RobotPlayer {
         return res;
     }
 
-    private int[] getNeighbors(MapLocation center) {
+    private final int[] getNeighbors(MapLocation center) {
         int[] res = new int[8];
         int centerIdx = locToIdx(center);
 
