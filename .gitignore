@@ -2,6 +2,7 @@ dist/*
 build/*
 src/lectureplayer
 
+/.vscode
 /matches
 /deploy/lib
 /deploy/bin
@@ -32,4 +33,4 @@ battlecode-scaffold.iws
 .settings/
 
 access.txt
-version.txt
+
