@@ -42,8 +42,9 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                     break;
                 }
             } else {
-                if(tryBuildRobot(RobotType.SLANDERER, dir, influence - influence% 20)){
-                    activeSlanderers.add(50 / 20);
+                int buildInfluence = influence - influence % 20;
+                if(tryBuildRobot(RobotType.SLANDERER, dir, buildInfluence)){
+                    activeSlanderers.add(buildInfluence / 20);
                     if(activeSlanderers.size() > 50) {
                         activeSlanderers.poll();
                     }
