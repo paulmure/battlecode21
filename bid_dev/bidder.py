@@ -4,16 +4,21 @@ from sys import argv
 from typing import Callable, List
 import numpy as np
 from matplotlib import pyplot as pp
+from multiprocessing import Pool
+from functools import partial
+from tqdm import tqdm
 
 FIRST_LOWBALL_BID = 50
 
-LOWBALL_INCREMENT = 5
+LOWBALL_INCREMENT = 1
 
 PASSABILITY = 1
 
 SURPLUS = 551
 
 ROUNDS = int(argv[1])
+
+wacky_bids = []
 
 
 BidOutcome = namedtuple('BidOutcome', ['price', 'outcome'])
@@ -50,13 +55,17 @@ def lowball_bid(state : BidderState) -> int:
 
 def other_bid(state : BidderState) -> int:
     # the other bid
-    desired_bid = math.floor(np.random.normal(state.current_influence-500, 100))
-
+    desired_bid = math.floor(np.random.normal(state.current_influence-500, 500))
+    desired_bid = max(1, desired_bid)
     return min(state.current_influence, desired_bid)
 
 
 def bid_all(state: BidderState) -> int:
     return state.current_influence
+
+
+def bid_half_of_income(state: BidderState) -> int:
+    return int(math.floor(SURPLUS * (PASSABILITY/2))) // 2
 
 
 def update_state(outcome : str, bid : int, state : BidderState) -> BidderState:
@@ -93,6 +102,7 @@ def run_economy(player_1: Callable[[BidderState], int], player_2: Callable[[Bidd
         
         p1_bid = player_1(p1_state)
         p2_bid = player_2(p2_state)
+        wacky_bids.append(p2_bid)
         # print(f'p1 bid: {p1_bid} ------ p2 bid: {p2_bid}')
 
         if p1_bid > p2_bid:
@@ -127,35 +137,54 @@ def run_economy(player_1: Callable[[BidderState], int], player_2: Callable[[Bidd
     if p1_votes < p2_votes:
         return 'p2'
     return 'tie'
+    # return p1_votes / ROUNDS
 
 
 def plot_bid(past_outcomes : List[BidOutcome], color : str, alpha=1):
     bid_prices = [entry.price for entry in past_outcomes]
-    pp.plot(bid_prices, color=color, alpha=alpha)
+    pp.plot(bid_prices[-100:], color=color, alpha=alpha)
     # ax = pp.gca()
     # ax.set_yscale('ax')
+
+
+def adjustment_agent():
+    outcomes = []
+    for i in tqdm(range(10)):
+        LOWBALL_INCREMENT = i
+        results = []
+        for i in range(100):
+            results.append(run_economy(lowball_bid, other_bid))
+        outcomes.append(np.mean(results))
+    pp.plot(range(1, 11), outcomes)
 
 
 def run_multiple(num_games):
     p1 = 0
     p2 = 0
     tie = 0
-    for _ in range(num_games):
-        res = run_economy(lowball_bid, other_bid)
+    
+    with Pool() as pool:
+        func = partial(run_economy, lowball_bid)
+        bs = [other_bid] * num_games
+        reses = list(tqdm(pool.imap(func, bs)))
+    
+    for res in reses:
         if res == 'p1':
             p1 += 1
         elif res == 'p2':
             p2 += 1
-        elif res == 'tie':
-            tie += 1
         else:
-            print(f"something wrong, res = {res}")
-    
+            tie += 1
+
     print(f'p1 = {p1}, p2 = {p2}, tie = {tie}')
     print(f'p1 wins {(p1 / (p1+p2+tie)) * 100:.2f}% of the time')
     
 
-                    
-# run_economy(lowball_bid, other_bid)
-# pp.show()
-run_multiple(1000)
+if __name__ == "__main__":
+    print(run_economy(lowball_bid, bid_half_of_income))
+    # adjustment_agent()
+    pp.show()
+    # pp.clf()
+    # pp.hist(wacky_bids)
+    # pp.show()
+    # run_multiple(1000)
