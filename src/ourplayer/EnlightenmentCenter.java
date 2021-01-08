@@ -36,26 +36,32 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         int influence = rc.getInfluence();
 
         Direction dir = randomDirection();
-        for(int i = 0; i < 8; i++){
-            if (rc.getRoundNum() < 300 && rc.getRoundNum() % 5 == 0){
-                if(tryBuildRobot(RobotType.POLITICIAN, dir, 50)){
-                    break;
-                }
-            } else {
-                if(tryBuildRobot(RobotType.SLANDERER, dir, 50)){
-                    activeSlanderers.add(50 / 20);
-                    if(activeSlanderers.size() > 50) {
-                        activeSlanderers.poll();
-                    }
-                    break;
-                }
-            } 
-            dir = dir.rotateRight();
-        }
 
-        int influencePerTurn = getECIncome();
-        for(Integer i : activeSlanderers) {
-            influencePerTurn += i;
+        /// BUILDING STUFF
+        // for(int i = 0; i < 8; i++){
+        //     if (rc.getRoundNum() < 300 && rc.getRoundNum() % 5 == 0){
+        //         if(tryBuildRobot(RobotType.POLITICIAN, dir, 50)){
+        //             break;
+        //         }
+        //     } else {
+        //         if(tryBuildRobot(RobotType.SLANDERER, dir, 50)){
+        //             activeSlanderers.add(50 / 20);
+        //             if(activeSlanderers.size() > 50) {
+        //                 activeSlanderers.poll();
+        //             }
+        //             break;
+        //         }
+        //     } 
+        //     dir = dir.rotateRight();
+        // }
+
+        // int influencePerTurn = getECIncome();
+        // for(Integer i : activeSlanderers) {
+        //     influencePerTurn += i;
+        // }
+        /////////////////////////
+        if (rc.getRoundNum() == 1){
+            tryBuildRobot(RobotType.MUCKRAKER, directions[1], 50);
         }
 
         if (rc.getRoundNum() % 50 == 0) {

@@ -2,6 +2,7 @@ dist/*
 build/*
 src/lectureplayer
 
+/.vscode
 /matches
 /deploy/lib
 /deploy/bin
@@ -33,3 +34,5 @@ battlecode-scaffold.iws
 
 access.txt
 version.txt
+
+gradle.properties
