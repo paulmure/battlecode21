@@ -3,11 +3,12 @@ package ourplayer;
 import battlecode.common.*;
 
 public class Politician extends RobotPlayer implements RoleController {
-    
+
     private double targetRadius;
     private MapLocation spawnEC;
     private int spawnECid;
     private int age;
+    MapLocation exploreLoc;
 
     public Politician() {
         age = 0;
@@ -27,8 +28,8 @@ public class Politician extends RobotPlayer implements RoleController {
         // first turn stuff
         // set spawnEC
 
-        if(spawnEC == null){
-            
+        if (spawnEC == null) {
+
             RobotInfo[] nearby = rc.senseNearbyRobots();
             for (int i = 0; i < nearby.length; i++) {
 
@@ -38,12 +39,13 @@ public class Politician extends RobotPlayer implements RoleController {
                     spawnECid = nearby[i].ID;
                 }
             }
-            // System.out.println("Initialized Politician, ID: "+rc.getID()+" EC: "+spawnEC);
-            
+            // System.out.println("Initialized Politician, ID: "+rc.getID()+" EC:
+            // "+spawnEC);
 
         } else {
-            // System.out.println("Initialized Politician from Slanderer. ID: "+rc.getID()+" EC: "+ spawnEC);
-            
+            // System.out.println("Initialized Politician from Slanderer. ID: "+rc.getID()+"
+            // EC: "+ spawnEC);
+
         }
 
     }
@@ -62,7 +64,7 @@ public class Politician extends RobotPlayer implements RoleController {
 
     public void run() throws GameActionException {
 
-        if (age == 0){
+        if (age == 0) {
             runFirstTurn();
         } 
 
@@ -76,14 +78,36 @@ public class Politician extends RobotPlayer implements RoleController {
             }
         }
 
-        if (bestMove != null) {
-            tryMove(bestMove);
+        for (RobotInfo r : rc.senseNearbyRobots()) {
+            if (!r.team.equals(rc.getTeam()) && rc.getLocation().isWithinDistanceSquared(r.location, 9)
+                    && rc.canEmpower(9)) {
+                rc.empower(9);
+            }
         }
+        if (rc.getRoundNum() < 600) {
+            Direction bestMove = null;
+            if (spawnEC != null) {
+                if (rc.getRoundNum() < 250) {
+                    bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, 2 * targetRadius / 3.0, 0.0);
+                } else {
+                    bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, targetRadius, 0.65);
+                }
+            }
+
+//             if (bestMove != null) {
+//                 tryMove(bestMove);
+//             }
+//         } else if (rc.getRoundNum() == 600) {
+//             exploreLoc = new MapLocation(10 * (rc.getLocation().x - spawnEC.x) + spawnEC.x,
+//                     10 * (rc.getLocation().y - spawnEC.y) + spawnEC.y);
+//         } else if (rc.getRoundNum() < 900) {
+//             tryMove(getRoughMoveTowards(exploreLoc, 2));
 
 
         // detects if enemy is nearby
         if(nearbyEnemy()){
             rc.empower(rc.getType().actionRadiusSquared);
+
         }
 
         // if (age >= 250){

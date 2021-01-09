@@ -23,15 +23,14 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
             for (int y = -6; y <= 6; y++) {
 
                 if (x * x + y * y <= 40 && x * x + y * y >= 32) {
-                    MapLocation thisLocation = new MapLocation(rc.getLocation().x+x, rc.getLocation().y+y);
+                    MapLocation thisLocation = new MapLocation(rc.getLocation().x + x, rc.getLocation().y + y);
 
                     rc.setIndicatorDot(thisLocation, 50, 205, 50);
                     // System.out.println("drawn dot at "+thisLocation);
-                    
+
                 }
             }
         }
-        
 
         int influence = rc.getInfluence();
 
