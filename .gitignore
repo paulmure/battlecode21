@@ -1,6 +1,7 @@
 dist/*
 build/*
 src/lectureplayer
+gradle/*
 
 /matches
 /deploy/lib
@@ -32,3 +33,8 @@ battlecode-scaffold.iws
 .settings/
 
 access.txt
+version.txt
+build.gradle
+gradle.properties
+gradlew
+gradlew.bat
