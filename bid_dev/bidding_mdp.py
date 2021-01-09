@@ -37,12 +37,12 @@ class BiddingMDP(MDP):
         pass
 
     def succ_prob_reward(self, state, action):
-        """
-        Given a state and action, return list of possible outcomes,
-        each as a tuple of (successor state, probability, reward)
-        """
         pass
 
 
+def main():
+    pass
+
+
 if __name__ == "__main__":
-    mdp = BiddingMDP(0.9, 500, 50)
+    main()
