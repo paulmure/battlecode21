@@ -1,6 +1,23 @@
 from abc import ABC, abstractmethod
 
+
 class MDP(ABC):
+
+    def __init__(self, discount) -> None:
+        self._discount = discount
+
+    @property
+    def discount(self) -> float:
+        """
+        Return the discount factor
+        """
+        return self._discount
+
+    @discount.setter
+    def discount(self, value) -> None:
+        if value < 0 or value > 1:
+            raise ValueError("Discount should be between 0 and 1")
+        self._discount = value
 
     @abstractmethod
     def start_state(self):
@@ -13,13 +30,6 @@ class MDP(ABC):
     def is_end(self, state) -> bool:
         """
         Check if a state is the end state
-        """
-        pass
-
-    @abstractmethod
-    def discount(self) -> float:
-        """
-        Return the discount factor
         """
         pass
 
@@ -37,4 +47,3 @@ class MDP(ABC):
         each as a tuple of (successor state, probability, reward)
         """
         pass
-
