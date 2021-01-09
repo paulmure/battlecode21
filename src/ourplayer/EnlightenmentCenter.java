@@ -58,9 +58,9 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         if (rc.getRoundNum() == 1){
             tryBuildRobot(RobotType.MUCKRAKER, directions[1], 50);
         }
-        if (influence + influencePerTurn > Integer.MAX_VALUE - 500000000){
-            rc.bid(influencePerTurn);
-        }
+        // if (influence + influencePerTurn > Integer.MAX_VALUE - 500000000){
+        //     rc.bid(influencePerTurn);
+        // }
         if (rc.getRoundNum() % 50 == 0) {
             System.out.println("I have " + influence + " influence on round " + rc.getRoundNum());
         }
