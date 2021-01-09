@@ -13,10 +13,11 @@ class BidState(StructClass):
 
 class BiddingMDP(MDP):
 
-    def __init__(self, discount, starting_influence, price_range) -> None:
+    def __init__(self, discount, starting_influence, price_range, price_delta) -> None:
         super().__init__(discount)
         self.starting_influence = starting_influence
         self.price_range = price_range
+        self.price_delta = price_delta
 
     def start_state(self) -> BidState:
         return BidState(round_number=1,
@@ -31,16 +32,9 @@ class BiddingMDP(MDP):
 
     def actions(self, state: BidState) -> List[int]:
         """
-        Action gives you a change in bid price relative to last round:
-        New Bid Price = Last Bid Price + Action
+        Action gives you a list of bid prices for the next round
         """
-        upper = self.price_range
-        if state.last_price + self.price_range > state.influence:
-            upper = state.influence - state.last_price
-        lower = -self.price_range
-        if state.last_price + lower < 1:
-            lower = -state.last_price + 1
-        return List(range(lower, upper))
+        pass
 
     def succ_prob_reward(self, state, action):
         """
@@ -51,4 +45,4 @@ class BiddingMDP(MDP):
 
 
 if __name__ == "__main__":
-    mdp = BiddingMDP(0.9)
+    mdp = BiddingMDP(0.9, 500, 50)
