@@ -85,7 +85,7 @@ public class Politician extends RobotPlayer implements RoleController {
             }
         }
         if (rc.getRoundNum() < 600) {
-            Direction bestMove = null;
+            bestMove = null;
             if (spawnEC != null) {
                 if (rc.getRoundNum() < 250) {
                     bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, 2 * targetRadius / 3.0, 0.0);
@@ -93,6 +93,7 @@ public class Politician extends RobotPlayer implements RoleController {
                     bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, targetRadius, 0.65);
                 }
             }
+        }
 
 //             if (bestMove != null) {
 //                 tryMove(bestMove);
