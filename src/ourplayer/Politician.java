@@ -11,7 +11,7 @@ public class Politician extends RobotPlayer implements RoleController {
     MapLocation exploreLoc;
 
     public Politician() {
-        age = 0;
+        age = -1;
         targetRadius = 60;
     }
 
@@ -63,10 +63,34 @@ public class Politician extends RobotPlayer implements RoleController {
     }
 
     public void run() throws GameActionException {
+        RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
+        MapLocation myLoc = rc.getLocation();
 
-        if (age == 0) {
+        if (++age == 0) {
             runFirstTurn();
         } 
+
+        RobotInfo closestEnemyMuck = null;
+        int closestMuckDist = 1000;
+        for (RobotInfo r : nearbyRobots) {
+            int dist = chebyshevDistance(myLoc, r.location);
+            if (r.type.equals(RobotType.MUCKRAKER) && !r.team.equals(rc.getTeam()) && dist < closestMuckDist) {
+                closestEnemyMuck = r;
+                closestMuckDist = dist;
+            }
+            if (!r.team.equals(rc.getTeam()) && rc.getLocation().isWithinDistanceSquared(r.location, 9)
+                    && rc.canEmpower(9)) {
+                rc.empower(9);
+            }
+        }
+
+        if (closestEnemyMuck != null) {
+            int d2toMuck = myLoc.distanceSquaredTo(closestEnemyMuck.location);
+            if (d2toMuck <= 2 && rc.canEmpower(d2toMuck)) {//adjacent to
+                rc.empower(d2toMuck);
+            }
+            tryMove(getRoughMoveTowards(closestEnemyMuck.location, 2));
+        }
 
         Direction bestMove = null;
         if(spawnEC != null){
@@ -78,12 +102,6 @@ public class Politician extends RobotPlayer implements RoleController {
             }
         }
 
-        for (RobotInfo r : rc.senseNearbyRobots()) {
-            if (!r.team.equals(rc.getTeam()) && rc.getLocation().isWithinDistanceSquared(r.location, 9)
-                    && rc.canEmpower(9)) {
-                rc.empower(9);
-            }
-        }
         if (rc.getRoundNum() < 600) {
             bestMove = null;
             if (spawnEC != null) {
@@ -117,7 +135,6 @@ public class Politician extends RobotPlayer implements RoleController {
         //     }
             
         // }
-        age++;
 
     }
 
