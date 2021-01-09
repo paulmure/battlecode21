@@ -36,33 +36,30 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
 
         Direction dir = randomDirection();
 
-        /// BUILDING STUFF
-        for (int i = 0; i < 8; i++) {
-            if (rc.getRoundNum() < 300 && rc.getRoundNum() % 5 == 0) {
-                if (tryBuildRobot(RobotType.POLITICIAN, dir, 50)) {
+        for(int i = 0; i < 8; i++){
+            if (rc.getRoundNum() < 300 && rc.getRoundNum() % 3 == 0){
+                if(tryBuildRobot(RobotType.POLITICIAN, dir, 75)){
                     break;
                 }
             } else {
-                if (tryBuildRobot(RobotType.SLANDERER, dir, 50)) {
-                    activeSlanderers.add(50 / 20);
-                    if (activeSlanderers.size() > 50) {
+                int buildInfluence = influence - influence % 20;
+                if(tryBuildRobot(RobotType.SLANDERER, dir, buildInfluence)){
+                    activeSlanderers.add(buildInfluence / 20);
+                    if(activeSlanderers.size() > 50) {
                         activeSlanderers.poll();
                     }
                     break;
                 }
-            }
+            } 
             dir = dir.rotateRight();
         }
 
-        int influencePerTurn = getECIncome();
-        for (Integer i : activeSlanderers) {
-            influencePerTurn += i;
+        if (rc.getRoundNum() == 1){
+            tryBuildRobot(RobotType.MUCKRAKER, directions[1], 50);
         }
-        /////////////////////////
-        // if (rc.getRoundNum() == 1) {
-        // tryBuildRobot(RobotType.MUCKRAKER, Direction.NORTH, 50);
+        // if (influence + influencePerTurn > Integer.MAX_VALUE - 500000000){
+        //     rc.bid(influencePerTurn);
         // }
-
         if (rc.getRoundNum() % 50 == 0) {
             System.out.println("I have " + influence + " influence on round " + rc.getRoundNum());
         }

@@ -236,7 +236,7 @@ public strictfp class RobotPlayer {
     protected boolean isOnHwy(MapLocation check, MapLocation ec) {
         // y = x
         // line defines northeast and southwest hwy
-        if (check.x - ec.x == check.y - ec.y) {
+        if (Math.abs(check.x - ec.x) == Math.abs(check.y - ec.y)){
             return true;
         }
         return false;
