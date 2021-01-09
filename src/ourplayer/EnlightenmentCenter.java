@@ -1,6 +1,5 @@
 package ourplayer;
 
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
 
@@ -8,12 +7,15 @@ import battlecode.common.*;
 
 public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     Deque<Integer> activeSlanderers;
+    private Bidder bidder;
 
     public EnlightenmentCenter() {
         activeSlanderers = new LinkedList<Integer>();
+        bidder = new Bidder();
     }
 
     public void run() throws GameActionException {
+        bidder.bid();
         // RobotType toBuild = RobotType.SLANDERER;
 
         // FIRST TIME
