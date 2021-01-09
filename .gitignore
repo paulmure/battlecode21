@@ -17,7 +17,7 @@ src/lectureplayer
 *.pyc
 .gradle
 /client/
-#*.jar
+*.jar
 *.iml
 *.ipr
 *.iws
