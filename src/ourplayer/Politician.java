@@ -9,9 +9,10 @@ public class Politician extends RobotPlayer implements RoleController {
     private int spawnECid;
     private int age;
     MapLocation exploreLoc;
+    int spawnRound;
 
     public Politician() {
-        age = -1;
+        spawnRound = rc.getRoundNum();
         targetRadius = 60;
     }
 
@@ -65,8 +66,9 @@ public class Politician extends RobotPlayer implements RoleController {
     public void run() throws GameActionException {
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
         MapLocation myLoc = rc.getLocation();
+        int age = rc.getRoundNum-spawnRound;
 
-        if (++age == 0) {
+        if (age == 0) {
             runFirstTurn();
         } 
 
