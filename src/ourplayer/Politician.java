@@ -93,10 +93,10 @@ public class Politician extends RobotPlayer implements RoleController {
         RobotInfo closestEnemyMuck = null;
         int closestMuckDist = 1000;
         for (RobotInfo r : nearbyRobots) {
-            int dist = chebyshevDistance(myLoc, r.location);
-            if (r.type.equals(RobotType.MUCKRAKER) && !r.team.equals(rc.getTeam()) && dist < closestMuckDist) {
+            if (r.type.equals(RobotType.MUCKRAKER) && !r.team.equals(rc.getTeam()) && 
+                    chebyshevDistance(myLoc, r.location) < closestMuckDist) {
                 closestEnemyMuck = r;
-                closestMuckDist = dist;
+                closestMuckDist = chebyshevDistance(myLoc, r.location);
             }
         }
 

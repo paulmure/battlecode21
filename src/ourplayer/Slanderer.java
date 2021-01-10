@@ -1,7 +1,6 @@
 package ourplayer;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 import battlecode.common.*;
 
@@ -42,12 +41,35 @@ public class Slanderer extends RobotPlayer implements RoleController {
             runFirstTurn();
         }
 
-        Direction bestMove = getBestVortex(restrictPossibleMoves(getPossibleMoves(false, spawnEC)), 
-            spawnEC, calculateTargetRadius2(), 0.0);
-        if (bestMove != null) {
-            tryMove(bestMove);
+        MapLocation myLoc = rc.getLocation();
+        RobotInfo closestEnemyMuck = null;
+        int closestMuckDist = 1000;
+        for (RobotInfo r : rc.senseNearbyRobots()) {
+            if (r.type.equals(RobotType.MUCKRAKER) && !r.team.equals(rc.getTeam()) && 
+                    chebyshevDistance(myLoc, r.location) < closestMuckDist) {
+                closestEnemyMuck = r;
+                closestMuckDist = chebyshevDistance(myLoc, r.location);
+            }
         }
 
+        if (closestEnemyMuck != null) {
+            Direction runDirection = Direction.CENTER;
+            int runDist = closestMuckDist;
+            for (Direction d : getPossibleMoves()) {
+                int dist = myLoc.add(d).distanceSquaredTo(closestEnemyMuck.location);
+                if (dist > runDist) {
+                    runDist = dist;
+                    runDirection = d;
+                }
+            }
+            tryMove(runDirection);
+        } else {
+            Direction bestMove = getBestVortex(restrictPossibleMoves(getPossibleMoves(false, spawnEC)), 
+            spawnEC, calculateTargetRadius2(), 0.0);
+            if (bestMove != null) {
+                tryMove(bestMove);
+            }
+        }
         age++;
     }
 
