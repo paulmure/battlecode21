@@ -86,8 +86,11 @@ public class Politician extends RobotPlayer implements RoleController {
         if (age == 0) {
             runFirstTurn();
         } 
+
         if (rc.getRoundNum() <= 300) {  //careful with this stuff
             age = 0;
+        } else {
+            age = rc.getRoundNum()-Math.max(spawnRound, 300);
         }
 
         RobotInfo closestEnemyMuck = null;

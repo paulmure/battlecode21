@@ -8,6 +8,8 @@ import battlecode.common.*;
 
 public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     Deque<Integer> activeSlanderers;
+    int[] idealSlandererInfluence = {0, 21, 41, 63, 85, 107, 130, 154, 178, 203, 228, 255, 282, 310, 339, 368, 399, 431, 463, 497, 532, 568, 605, 643, 683, 724, 766, 810, 855, 902, 949, Integer.MAX_VALUE};
+
 
     public EnlightenmentCenter() {
         activeSlanderers = new LinkedList<Integer>();
@@ -36,18 +38,23 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
 
         Direction dir = randomDirection();
 
+        int index = idealSlandererInfluence.length - 1;
+        while (idealSlandererInfluence[index] > influence) {
+            --index;
+        }
+        int bestSlanderer = idealSlandererInfluence[index];
+
         for(int i = 0; i < 8; i++){
             if (rc.getRoundNum() < 300 && rc.getRoundNum() % 3 == 0){
                 if(tryBuildRobot(RobotType.POLITICIAN, dir, 75)){
                     break;
                 }
             } else {
-                int buildInfluence = influence - influence % 20;
-                if(tryBuildRobot(RobotType.SLANDERER, dir, buildInfluence)){
-                    activeSlanderers.add(buildInfluence / 20);
-                    if(activeSlanderers.size() > 50) {
-                        activeSlanderers.poll();
-                    }
+                if(tryBuildRobot(RobotType.SLANDERER, dir, bestSlanderer)){
+                    // activeSlanderers.add(bestSlanderer / 20);
+                    // if(activeSlanderers.size() > 50) {
+                    //     activeSlanderers.poll();
+                    // }
                     break;
                 }
             } 
