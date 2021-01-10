@@ -1,7 +1,6 @@
 package ourplayer;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 import battlecode.common.*;
 
@@ -20,12 +19,18 @@ public class Slanderer extends RobotPlayer implements RoleController {
         return spawnECid;
     }
 
+    private double ecPassability;
+    public double getEcPassability() {
+        return ecPassability;
+    }
+
+    final int minRadius = 10;
+    final double passabilityMultiplier = 55; // change this to change outer radius^2
     private double endRadius2;
     private double beginRadius2;
 
     public Slanderer() {
         age = 0;
-        // change this to change outer radius^2
         endRadius2 = 35;
         // change this to change the inner radius^2
         beginRadius2 = 4;
@@ -36,12 +41,48 @@ public class Slanderer extends RobotPlayer implements RoleController {
             runFirstTurn();
         }
 
-        Direction bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, calculateTargetRadius2(), 0.0);
-        if (bestMove != null) {
-            tryMove(bestMove);
+        MapLocation myLoc = rc.getLocation();
+        RobotInfo closestEnemyMuck = null;
+        int closestMuckDist = 1000;
+        for (RobotInfo r : rc.senseNearbyRobots()) {
+            if (r.type.equals(RobotType.MUCKRAKER) && !r.team.equals(rc.getTeam()) && 
+                    chebyshevDistance(myLoc, r.location) < closestMuckDist) {
+                closestEnemyMuck = r;
+                closestMuckDist = chebyshevDistance(myLoc, r.location);
+            }
         }
 
+        if (closestEnemyMuck != null) {
+            Direction runDirection = Direction.CENTER;
+            int runDist = closestMuckDist;
+            for (Direction d : getPossibleMoves()) {
+                int dist = myLoc.add(d).distanceSquaredTo(closestEnemyMuck.location);
+                if (dist > runDist) {
+                    runDist = dist;
+                    runDirection = d;
+                }
+            }
+            tryMove(runDirection);
+        } else {
+            Direction bestMove = getBestVortex(restrictPossibleMoves(getPossibleMoves(false, spawnEC)), 
+            spawnEC, calculateTargetRadius2(), 0.0);
+            if (bestMove != null) {
+                tryMove(bestMove);
+            }
+        }
         age++;
+    }
+
+    private ArrayList<Direction> restrictPossibleMoves(ArrayList<Direction> moves) {
+        ArrayList<Direction> possibleMoves = new ArrayList<>();
+        MapLocation myLoc = rc.getLocation();
+        for (Direction d : moves) {
+            MapLocation testLoc = myLoc.add(d);
+            if (testLoc.distanceSquaredTo(spawnEC) <= endRadius2) {
+                possibleMoves.add(d);
+            }
+        }
+        return possibleMoves;
     }
 
     private double calculateTargetRadius2() {
@@ -65,7 +106,7 @@ public class Slanderer extends RobotPlayer implements RoleController {
         return (((double) endRadius2 - beginRadius2)/300 * age) + beginRadius2;
     }
 
-    private void runFirstTurn() {
+    private void runFirstTurn() throws GameActionException{
         // first turn stuff
 
         // set spawnEC
@@ -78,7 +119,8 @@ public class Slanderer extends RobotPlayer implements RoleController {
                 spawnECid = nearby[i].ID;
             }
         }
-
+        ecPassability = rc.sensePassability(spawnEC);
+        endRadius2 = minRadius + ecPassability * passabilityMultiplier;
     }
 
 }

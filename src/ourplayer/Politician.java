@@ -4,27 +4,43 @@ import battlecode.common.*;
 
 public class Politician extends RobotPlayer implements RoleController {
 
-    private double targetRadius;
+    final int minRadius = 16;
+    final double passabilityMultiplier = 64;
+    final double wideningMultiplier = 0.3; //0.25
+    final double wideningExponent = 1; //0.93
+    final double standingWeight = 0.5;
+    private double maxRadius;
     private MapLocation spawnEC;
+    private double ecPassability;
     private int spawnECid;
     private int age;
     MapLocation exploreLoc;
+    int spawnRound;
 
     public Politician() {
-        age = 0;
-        targetRadius = 60;
+        spawnRound = rc.getRoundNum();
+        maxRadius = 60;
     }
 
-    public Politician(MapLocation ec, int ecID) {
+    public Politician(MapLocation ec, int ecID, double ecP) {
         this();
         // shut the fuck
         spawnEC = ec;
 
         spawnECid = ecID;
+        ecPassability = ecP;
         // System.out.println("joe mama: " + ec);
     }
 
-    private void runFirstTurn() {
+    private double getTargetRadius() {
+        if(rc.getRoundNum() < 300) {
+            return minRadius + (maxRadius - minRadius) * rc.getRoundNum() / 300;
+        } else {
+            return maxRadius + Math.pow(age, wideningExponent) * ecPassability * wideningMultiplier;
+        }
+    }
+
+    private void runFirstTurn() throws GameActionException {
         // first turn stuff
         // set spawnEC
 
@@ -39,15 +55,15 @@ public class Politician extends RobotPlayer implements RoleController {
                     spawnECid = nearby[i].ID;
                 }
             }
+            ecPassability = rc.sensePassability(spawnEC);
             // System.out.println("Initialized Politician, ID: "+rc.getID()+" EC:
             // "+spawnEC);
 
         } else {
             // System.out.println("Initialized Politician from Slanderer. ID: "+rc.getID()+"
             // EC: "+ spawnEC);
-
         }
-
+        maxRadius = minRadius + ecPassability * passabilityMultiplier;
     }
 
     private boolean nearbyEnemy(){
@@ -63,41 +79,50 @@ public class Politician extends RobotPlayer implements RoleController {
     }
 
     public void run() throws GameActionException {
+        RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
+        MapLocation myLoc = rc.getLocation();
+        age = rc.getRoundNum()-spawnRound;
 
         if (age == 0) {
             runFirstTurn();
         } 
 
+        if (rc.getRoundNum() <= 300) {  //careful with this stuff
+            age = 0;
+        } else {
+            age = rc.getRoundNum()-Math.max(spawnRound, 300);
+        }
+
+        RobotInfo closestEnemyMuck = null;
+        int closestMuckDist = 1000;
+        for (RobotInfo r : nearbyRobots) {
+            if (r.type.equals(RobotType.MUCKRAKER) && !r.team.equals(rc.getTeam()) && 
+                    chebyshevDistance(myLoc, r.location) < closestMuckDist) {
+                closestEnemyMuck = r;
+                closestMuckDist = chebyshevDistance(myLoc, r.location);
+            }
+        }
+
+        if (closestEnemyMuck != null) {
+            int d2toMuck = myLoc.distanceSquaredTo(closestEnemyMuck.location);
+            if (d2toMuck <= 2 && rc.canEmpower(d2toMuck)) {//adjacent to
+                rc.empower(d2toMuck);
+            }
+            tryMove(getRoughMoveTowards(closestEnemyMuck.location, 2));
+        }
+
         Direction bestMove = null;
         if(spawnEC != null){
-            if(rc.getRoundNum() < 250){
-                bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, targetRadius/2.0, 0.0);
-            }else{
-                //0.65 is roughly 2 thick
-                bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, targetRadius, 0.65);
+            if (rc.getRoundNum() < 300) {
+                bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, getTargetRadius(), 0.0);
+            } else {
+                bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, getTargetRadius(), standingWeight);
             }
         }
 
-        for (RobotInfo r : rc.senseNearbyRobots()) {
-            if (!r.team.equals(rc.getTeam()) && rc.getLocation().isWithinDistanceSquared(r.location, 9)
-                    && rc.canEmpower(9)) {
-                rc.empower(9);
-            }
+        if (bestMove != null) {
+            tryMove(bestMove);
         }
-        if (rc.getRoundNum() < 600) {
-            bestMove = null;
-            if (spawnEC != null) {
-                if (rc.getRoundNum() < 250) {
-                    bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, 2 * targetRadius / 3.0, 0.0);
-                } else {
-                    bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, targetRadius, 0.65);
-                }
-            }
-        }
-
-//             if (bestMove != null) {
-//                 tryMove(bestMove);
-//             }
 //         } else if (rc.getRoundNum() == 600) {
 //             exploreLoc = new MapLocation(10 * (rc.getLocation().x - spawnEC.x) + spawnEC.x,
 //                     10 * (rc.getLocation().y - spawnEC.y) + spawnEC.y);
@@ -106,10 +131,10 @@ public class Politician extends RobotPlayer implements RoleController {
 
 
         // detects if enemy is nearby
-        if(nearbyEnemy()){
-            rc.empower(rc.getType().actionRadiusSquared);
+        // if(nearbyEnemy()){
+        //     rc.empower(rc.getType().actionRadiusSquared);
 
-        }
+        // }
 
         // if (age >= 250){
         //     if (Math.random() > 0.4 && rc.canEmpower(1)){
@@ -117,8 +142,6 @@ public class Politician extends RobotPlayer implements RoleController {
         //     }
             
         // }
-        age++;
-
     }
 
 }

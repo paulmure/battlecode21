@@ -71,7 +71,8 @@ public strictfp class RobotPlayer {
                                 // System.out.println("passing ec info: " + ((Slanderer)
                                 // controller).getSpawnEc());
                                 controller = new Politician(((Slanderer) controller).getSpawnEc(),
-                                        ((Slanderer) controller).getSpawnEcId());
+                                        ((Slanderer) controller).getSpawnEcId(),
+                                        ((Slanderer) controller).getEcPassability());
                             } else {
                                 // System.out.println("Controller was not Instance of Slanderer. was
                                 // "+controller);
@@ -156,35 +157,18 @@ public strictfp class RobotPlayer {
         return ((int) Math.sqrt(rc.getRoundNum())) / 5;
     }
 
-    // Scuffed greedy pathfinder that will do ok and not get stuck
-    // protected Direction getRoughMoveTowards(MapLocation target) throws
-    // GameActionException{
-    // MapLocation me = rc.getLocation();
-    // if(target.isAdjacentTo(me)) {
-    // return me.directionTo(target);
-    // }
-    // int dx = target.x - me.x;
-    // int dy = target.y - me.y;
-    // double bestWeight = 0;
-    // Direction bestDirection = Direction.CENTER;
-    // for(Direction d : directions){
-    // int newDx = dx - d.dx;
-    // int newDy = dy - d.dy;
-    // if(Math.abs(newDx) + Math.abs(newDy) < Math.abs(dx) + Math.abs(dy) ||
-    // Math.max(Math.abs(newDx), Math.abs(newDy)) < Math.max(Math.abs(dx),
-    // Math.abs(dy)) && rc.canMove(d)) {
-    // double dotProduct = (dx * d.dx + dy * d.dy) / (Math.sqrt(dx*dx + dy*dy) *
-    // Math.sqrt(d.dx*d.dx + d.dy*d.dy));
-    // double weight = rc.sensePassability(me.add(d)) * (1 + dotProduct);
-    // System.out.println("legal direction " + d + "has weight " + weight);
-    // if(weight > bestWeight) {
-    // bestWeight = weight;
-    // bestDirection = d;
-    // }
-    // }
-    // }
-    // return bestDirection;
-    // }
+    int chebyshevDistance(MapLocation a, MapLocation b) {
+        return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+    }
+
+    protected boolean strictFollowPath(ArrayList<Direction> path) throws GameActionException{
+        if (path.size() > 0 && rc.canMove(path.get(0))) {
+            rc.move(path.remove(0));
+            return true;
+        }
+        return false;
+    }
+
     protected Direction getRoughMoveTowards(MapLocation target) throws GameActionException {
         return getRoughMoveTowards(target, 1);
     }
@@ -340,22 +324,4 @@ public strictfp class RobotPlayer {
         // cross product
 
     }
-
-    // protected Direction getBestExpand(ArrayList<Direction> possibleMoves,
-    // MapLocation spawnEC) {
-    // double bestWeight = 0
-    // Direction bestDirection = null;
-    // for(Direction d : possibleMoves) {
-    // targetVecX = d.dx;
-    // targetVecY = d.dy;
-
-    // // to calculate r^2 to given move, use the current pos (ecVec) and add the
-    // // move's vector (targetVec), then r^2 it
-    // int moveR2 = (int) (Math.pow(ecVecX + targetVecX, 2) + Math.pow(ecVecY +
-    // targetVecY, 2));
-    // double deltaR2 = Math.abs(targetRadius - moveR2);
-
-    // double weight =
-    // }
-    // }
 }
