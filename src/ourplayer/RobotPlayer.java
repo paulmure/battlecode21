@@ -71,7 +71,8 @@ public strictfp class RobotPlayer {
                                 // System.out.println("passing ec info: " + ((Slanderer)
                                 // controller).getSpawnEc());
                                 controller = new Politician(((Slanderer) controller).getSpawnEc(),
-                                        ((Slanderer) controller).getSpawnEcId());
+                                        ((Slanderer) controller).getSpawnEcId(),
+                                        ((Slanderer) controller).getEcPassability());
                             } else {
                                 // System.out.println("Controller was not Instance of Slanderer. was
                                 // "+controller);

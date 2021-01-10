@@ -20,12 +20,18 @@ public class Slanderer extends RobotPlayer implements RoleController {
         return spawnECid;
     }
 
+    private double ecPassability;
+    public double getEcPassability() {
+        return ecPassability;
+    }
+
+    final int minRadius = 10;
+    final double passabilityMultiplier = 55; // change this to change outer radius^2
     private double endRadius2;
     private double beginRadius2;
 
     public Slanderer() {
         age = 0;
-        // change this to change outer radius^2
         endRadius2 = 35;
         // change this to change the inner radius^2
         beginRadius2 = 4;
@@ -36,12 +42,25 @@ public class Slanderer extends RobotPlayer implements RoleController {
             runFirstTurn();
         }
 
-        Direction bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, calculateTargetRadius2(), 0.0);
+        Direction bestMove = getBestVortex(restrictPossibleMoves(getPossibleMoves(false, spawnEC)), 
+            spawnEC, calculateTargetRadius2(), 0.0);
         if (bestMove != null) {
             tryMove(bestMove);
         }
 
         age++;
+    }
+
+    private ArrayList<Direction> restrictPossibleMoves(ArrayList<Direction> moves) {
+        ArrayList<Direction> possibleMoves = new ArrayList<>();
+        MapLocation myLoc = rc.getLocation();
+        for (Direction d : moves) {
+            MapLocation testLoc = myLoc.add(d);
+            if (testLoc.distanceSquaredTo(spawnEC) <= endRadius2) {
+                possibleMoves.add(d);
+            }
+        }
+        return possibleMoves;
     }
 
     private double calculateTargetRadius2() {
@@ -65,7 +84,7 @@ public class Slanderer extends RobotPlayer implements RoleController {
         return (((double) endRadius2 - beginRadius2)/300 * age) + beginRadius2;
     }
 
-    private void runFirstTurn() {
+    private void runFirstTurn() throws GameActionException{
         // first turn stuff
 
         // set spawnEC
@@ -78,7 +97,8 @@ public class Slanderer extends RobotPlayer implements RoleController {
                 spawnECid = nearby[i].ID;
             }
         }
-
+        ecPassability = rc.sensePassability(spawnEC);
+        endRadius2 = minRadius + ecPassability * passabilityMultiplier;
     }
 
 }
