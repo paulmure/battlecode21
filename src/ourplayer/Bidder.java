@@ -4,7 +4,7 @@ import battlecode.common.GameActionException;
 
 public class Bidder extends RobotPlayer {
     private static final int FIRST_ROUND_BID = 50;
-    private static final int INCREMENT = 1;
+    private static final int INCREMENT = 5;
     private int roundsLost = 0;
     private int lastBid;
     private int lastRoundVotes;
