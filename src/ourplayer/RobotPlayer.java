@@ -161,7 +161,7 @@ public strictfp class RobotPlayer {
         return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
     }
 
-    protected boolean strictFollowPath(ArrayList<Direction> path) throws GameActionException{
+    protected boolean strictFollowPath(ArrayList<Direction> path) throws GameActionException {
         if (path.size() > 0 && rc.canMove(path.get(0))) {
             rc.move(path.remove(0));
             return true;
@@ -220,7 +220,7 @@ public strictfp class RobotPlayer {
     protected boolean isOnHwy(MapLocation check, MapLocation ec) {
         // y = x
         // line defines northeast and southwest hwy
-        if (Math.abs(check.x - ec.x) == Math.abs(check.y - ec.y)){
+        if (Math.abs(check.x - ec.x) == Math.abs(check.y - ec.y)) {
             return true;
         }
         return false;
@@ -322,6 +322,26 @@ public strictfp class RobotPlayer {
         // hard?: weight moves by how clockwise they are (negative for backwards)
         // "perpendicularity" of vector to ec and vector to move
         // cross product
-
     }
+
+    // protected int locationToFlag(MapLocation spawnECLoc, MapLocation targetLoc) {
+    //     int dx = targetLoc.x - spawnECLoc.x;
+    //     int x_7bit = (dx & 0x3F) | (dx >> 25);
+
+    //     int dy = targetLoc.y - spawnECLoc.y;
+    //     int y_7bit = (dy & 0x3F) | (dy >> 25);
+
+    //     return (x_7bit << 7) | y_7bit;
+    // }
+
+    // protected MapLocation flagToLocation(int flag, MapLocation spawnEC) {
+    //     int dx = flag >>> 17;
+    //     int dy = flag >>> 
+    // }
+
+    // private int signedExtension(int num, int signBit) {
+    //     int abs = num ^ (1 << signBit);
+    //     return abs | (num & )
+    // }
+
 }
