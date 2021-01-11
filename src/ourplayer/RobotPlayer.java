@@ -161,7 +161,7 @@ public strictfp class RobotPlayer {
         return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
     }
 
-    protected boolean strictFollowPath(ArrayList<Direction> path) throws GameActionException{
+    protected boolean strictFollowPath(ArrayList<Direction> path) throws GameActionException {
         if (path.size() > 0 && rc.canMove(path.get(0))) {
             rc.move(path.remove(0));
             return true;
@@ -220,7 +220,7 @@ public strictfp class RobotPlayer {
     protected boolean isOnHwy(MapLocation check, MapLocation ec) {
         // y = x
         // line defines northeast and southwest hwy
-        if (Math.abs(check.x - ec.x) == Math.abs(check.y - ec.y)){
+        if (Math.abs(check.x - ec.x) == Math.abs(check.y - ec.y)) {
             return true;
         }
         return false;
