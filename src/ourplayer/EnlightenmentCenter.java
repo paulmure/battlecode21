@@ -13,7 +13,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     int spawnTurn;
     int age;
     int startBiddingRound = 300;
-    double politiciansPerSlanderer = 0.5;
+    double politiciansPerSlanderer = 9;
     int slanderersBuilt = 0;
     int politiciansBuilt = 0;
 
