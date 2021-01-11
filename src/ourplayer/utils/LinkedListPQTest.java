@@ -75,11 +75,9 @@ public class LinkedListPQTest {
         pq.push(3, 13);
         LinkedListPQ.Node toDecrease = pq.push(5, 15);
 
-        pq.print();
         assertEquals(pq.isEmpty(), false);
 
         assertEquals(pq.pop(), 11);
-        pq.print();
         assertEquals(pq.pop(), 12);
         pq.decreaseKey(toDecrease, 0);
         assertEquals(pq.pop(), 15);

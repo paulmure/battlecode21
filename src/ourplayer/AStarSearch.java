@@ -22,6 +22,8 @@ public strictfp class AStarSearch extends RobotPlayer {
     private final int sourceIdx = 84;
     private final int targetIdx;
 
+    private ArrayList<MapLocation> explored = new ArrayList<MapLocation>();
+
     private final int locToIdx(MapLocation loc) {
         return 13 * (loc.x - source.x + 6) + (loc.y - source.y + 6);
     }
@@ -51,28 +53,22 @@ public strictfp class AStarSearch extends RobotPlayer {
         int dx = Math.abs(a.x - b.x);
         int dy = Math.abs(a.y - b.y);
         int chebyshev = Math.max(dx, dy);
-        return chebyshev;
-        // int euclidean = dx * dx + dy * dy;
-        // return (chebyshev + euclidean * 0.00001) / 0.752;
+        // return chebyshev;
+        int euclidean = dx * dx + dy * dy;
+        return (chebyshev + euclidean * 0.00001) / 0.752;
     }
 
-    public ArrayList<Direction> findPath() throws GameActionException {
+    public Stack<Direction> findPath() throws GameActionException {
         LinkedListPQ frontier = new LinkedListPQ();
 
         LinkedListPQ.Node sourceNode = frontier.push(0, sourceIdx);
         nodes[sourceIdx] = sourceNode;
 
         int current = 0;
-        int counter = 0;
         while (!frontier.isEmpty()) {
-            counter++;
-
             current = frontier.pop();
-            System.out.println("entering " + (locs[current].x - source.x) + ", " + (locs[current].y - source.y)
-                    + " with fscore " + nodes[current].key);
-            // frontier.print();
+            explored.add(locs[current]);
             if (current == targetIdx) {
-                System.out.println("total loop: " + counter);
                 return reconstructPath(current);
             }
             visited[current] = true;
@@ -103,14 +99,17 @@ public strictfp class AStarSearch extends RobotPlayer {
         return null;
     }
 
-    private final ArrayList<Direction> reconstructPath(int currentIdx) {
-        ArrayList<Direction> res = new ArrayList<Direction>(stateSpace / 4);
+    private final Stack<Direction> reconstructPath(int currentIdx) {
+        for (MapLocation loc: explored) {
+            rc.setIndicatorDot(loc, 255, 0, 0);
+        }
+        Stack<Direction> res = new Stack<Direction>();
         MapLocation currentLoc = locs[currentIdx];
         while (currentIdx != sourceIdx) {
             rc.setIndicatorDot(currentLoc, 0, 255, 0);
             int prevIdx = prev[currentIdx];
             MapLocation prevLoc = locs[prevIdx];
-            res.add(0, prevLoc.directionTo(currentLoc));
+            res.push(prevLoc.directionTo(currentLoc));
             currentIdx = prevIdx;
             currentLoc = prevLoc;
         }

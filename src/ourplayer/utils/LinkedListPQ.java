@@ -85,22 +85,24 @@ public class LinkedListPQ {
         return res;
     }
 
-    public void print() {
+    public String toString() {
         Node tmp = this.head;
         if (tmp == null) {
-            System.out.println("Empty queue...");
-            return;
+            return "Empty queue...";
         }
 
+        String res = "";
         if (tmp.prev != null) {
-            System.out.println("error, there is something before the head: " + tmp.prev);
+            res += "error, there is something before the head: ";
+            res += tmp.prev;
         }
         while (tmp != null) {
-            System.out.printf("(%f, %d) <-> ", tmp.key, tmp.value);
+            res += String.format("(%f, %d) <-> ", tmp.key, tmp.value);
             tmp = tmp.next;
         }
-        System.out.print("\b\b\b\b    \n");
+        res += "\b\b\b\b    \n";
 
-        System.out.printf("min key: %f, min value: %d\n", this.min.key, this.min.value);
+        res += String.format("min key: %f, min value: %d\n", this.min.key, this.min.value);
+        return res;
     }
 }
