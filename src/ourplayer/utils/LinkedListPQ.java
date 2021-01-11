@@ -17,7 +17,7 @@ public class LinkedListPQ {
 
     Node head;
     Node min;
-    
+
     public LinkedListPQ() {
         this.head = null;
         this.min = null;
@@ -71,17 +71,17 @@ public class LinkedListPQ {
         }
 
         Node tmp = this.head;
-        int minKey = Integer.MAX_VALUE;
+        double minKey = Integer.MAX_VALUE;
         this.min = null;
 
         while (tmp != null) {
-            if (tmp.value < minKey) {
+            if (tmp.key < minKey) {
                 this.min = tmp;
-                minKey = tmp.value;
+                minKey = tmp.key;
             }
             tmp = tmp.next;
         }
-        
+
         return res;
     }
 
@@ -96,11 +96,11 @@ public class LinkedListPQ {
             System.out.println("error, there is something before the head: " + tmp.prev);
         }
         while (tmp != null) {
-            System.out.printf("(%d, %d) <-> ", tmp.key, tmp.value);
+            System.out.printf("(%f, %d) <-> ", tmp.key, tmp.value);
             tmp = tmp.next;
         }
         System.out.print("\b\b\b\b    \n");
 
-        System.out.printf("min key: %d, min value: %d\n", this.min.key, this.min.value);
+        System.out.printf("min key: %f, min value: %d\n", this.min.key, this.min.value);
     }
 }

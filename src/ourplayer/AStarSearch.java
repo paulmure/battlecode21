@@ -7,8 +7,8 @@ import ourplayer.utils.LinkedListPQ;
 public strictfp class AStarSearch extends RobotPlayer {
 
     private static final int[] neighborsOffset = { 1, 14, 13, 12, -1, -14, -13, -12 };
-    private static final Direction[] directions = { Direction.NORTH, Direction.NORTHEAST, Direction.EAST, Direction.SOUTHEAST,
-            Direction.SOUTH, Direction.SOUTHWEST, Direction.WEST, Direction.NORTHWEST, };
+    private static final Direction[] directions = { Direction.NORTH, Direction.NORTHEAST, Direction.EAST,
+            Direction.SOUTHEAST, Direction.SOUTH, Direction.SOUTHWEST, Direction.WEST, Direction.NORTHWEST, };
 
     private final int stateSpace = 13 * 13;
     private MapLocation[] locs;
@@ -51,12 +51,12 @@ public strictfp class AStarSearch extends RobotPlayer {
         int dx = Math.abs(a.x - b.x);
         int dy = Math.abs(a.y - b.y);
         int chebyshev = Math.max(dx, dy);
-        // return chebyshev / 0.55;
-        int euclidean = dx * dx + dy * dy;
-        return (chebyshev + euclidean * 0.00001);
+        return chebyshev;
+        // int euclidean = dx * dx + dy * dy;
+        // return (chebyshev + euclidean * 0.00001) / 0.752;
     }
 
-    public ArrayList<Direction> findPath() throws GameActionException{
+    public ArrayList<Direction> findPath() throws GameActionException {
         LinkedListPQ frontier = new LinkedListPQ();
 
         LinkedListPQ.Node sourceNode = frontier.push(0, sourceIdx);
@@ -68,6 +68,9 @@ public strictfp class AStarSearch extends RobotPlayer {
             counter++;
 
             current = frontier.pop();
+            System.out.println("entering " + (locs[current].x - source.x) + ", " + (locs[current].y - source.y)
+                    + " with fscore " + nodes[current].key);
+            // frontier.print();
             if (current == targetIdx) {
                 System.out.println("total loop: " + counter);
                 return reconstructPath(current);
@@ -80,19 +83,18 @@ public strictfp class AStarSearch extends RobotPlayer {
             double tentativeGScore = gScores[current] + (1 / rc.sensePassability(locs[current]));
 
             for (int neighbor : neighbors) {
-                if (neighbor == -1 || !rc.canSenseLocation(locs[neighbor])) continue;
+                if (visited[neighbor] || neighbor == -1 || !rc.canSenseLocation(locs[neighbor]))
+                    continue;
 
                 if (tentativeGScore < gScores[neighbor]) {
                     gScores[neighbor] = tentativeGScore;
                     prev[neighbor] = current;
-                    
-                    if (!visited[neighbor]) {
-                        double fScore = gScores[neighbor] + heuristics(locs[neighbor], target);
-                        if (nodes[neighbor] == null) {
-                            nodes[neighbor] = frontier.push(fScore, neighbor);
-                        } else {
-                            frontier.decreaseKey(nodes[neighbor], fScore);
-                        }
+
+                    double fScore = gScores[neighbor] + heuristics(locs[neighbor], target);
+                    if (nodes[neighbor] == null) {
+                        nodes[neighbor] = frontier.push(fScore, neighbor);
+                    } else {
+                        frontier.decreaseKey(nodes[neighbor], fScore);
                     }
                 }
             }
