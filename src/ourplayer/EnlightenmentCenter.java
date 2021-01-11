@@ -55,7 +55,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         if (spawnTurn == 1) {
             for (int i = 0; i < 8; i++) {
                 if (rc.getRoundNum() < 400 && slanderersBuilt * politiciansPerSlanderer > politiciansBuilt) {
-                    if (tryBuildRobot(RobotType.POLITICIAN, dir, 12)) {
+                    if (tryBuildRobot(RobotType.POLITICIAN, dir, 15)) {
                         politiciansBuilt++;
                         break;
                     }
