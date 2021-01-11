@@ -12,6 +12,9 @@ public class Bidder extends RobotPlayer {
     public void bid() throws GameActionException {
         int bid;
         int thisRoundVotes = rc.getTeamVotes();
+        if (thisRoundVotes > 1500) {
+            return;
+        }
 
         // is there a way to get around checking this every round?
         if (rc.getRoundNum() == 1) {
@@ -39,7 +42,8 @@ public class Bidder extends RobotPlayer {
             lastBid = bid;
         }
 
-        // System.out.printf("Round: %d, bid: %d, lastRoundVotes: %d, thisRoundVotes: %d\n", rc.getRoundNum(), bid, lastRoundVotes, thisRoundVotes);
+        // System.out.printf("Round: %d, bid: %d, lastRoundVotes: %d, thisRoundVotes:
+        // %d\n", rc.getRoundNum(), bid, lastRoundVotes, thisRoundVotes);
         lastRoundVotes = thisRoundVotes;
     }
 }
