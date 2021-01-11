@@ -2,7 +2,6 @@ package ourplayer;
 
 import battlecode.common.*;
 import java.util.*;
-import ourplayer.utils.Vector;
 import ourplayer.utils.LinkedListPQ;
 
 public strictfp class AStarSearch extends RobotPlayer {
@@ -15,7 +14,7 @@ public strictfp class AStarSearch extends RobotPlayer {
     private MapLocation[] locs;
     private LinkedListPQ.Node[] nodes;
 
-    private int[] gScores;
+    private double[] gScores;
     private int[] prev;
     private boolean[] visited;
     private final MapLocation source;
@@ -34,7 +33,7 @@ public strictfp class AStarSearch extends RobotPlayer {
         targetIdx = locToIdx(target);
 
         locs = new MapLocation[stateSpace];
-        gScores = new int[stateSpace];
+        gScores = new double[stateSpace];
         prev = new int[stateSpace];
         visited = new boolean[stateSpace];
         nodes = new LinkedListPQ.Node[stateSpace];
@@ -48,8 +47,13 @@ public strictfp class AStarSearch extends RobotPlayer {
         gScores[sourceIdx] = 0;
     }
 
-    private final static int heuristics(MapLocation a, MapLocation b) {
-        return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+    private final double heuristics(MapLocation a, MapLocation b) {
+        int dx = Math.abs(a.x - b.x);
+        int dy = Math.abs(a.y - b.y);
+        int chebyshev = Math.max(dx, dy);
+        // return chebyshev / 0.55;
+        int euclidean = dx * dx + dy * dy;
+        return (chebyshev + euclidean * 0.00001);
     }
 
     public ArrayList<Direction> findPath() throws GameActionException{
@@ -59,11 +63,13 @@ public strictfp class AStarSearch extends RobotPlayer {
         nodes[sourceIdx] = sourceNode;
 
         int current = 0;
+        int counter = 0;
         while (!frontier.isEmpty()) {
+            counter++;
 
             current = frontier.pop();
-
             if (current == targetIdx) {
+                System.out.println("total loop: " + counter);
                 return reconstructPath(current);
             }
             visited[current] = true;
@@ -71,20 +77,22 @@ public strictfp class AStarSearch extends RobotPlayer {
 
             int[] neighbors = getNeighbors(locs[current]);
 
-            int tentativeGScore = gScores[current] + (int) (1 / rc.sensePassability(locs[current]));
+            double tentativeGScore = gScores[current] + (1 / rc.sensePassability(locs[current]));
 
             for (int neighbor : neighbors) {
-                if (visited[neighbor] || neighbor == -1 || !rc.canSenseLocation(locs[neighbor])) continue;
+                if (neighbor == -1 || !rc.canSenseLocation(locs[neighbor])) continue;
 
                 if (tentativeGScore < gScores[neighbor]) {
                     gScores[neighbor] = tentativeGScore;
-                    int fScore = gScores[neighbor] + heuristics(locs[neighbor], target);
                     prev[neighbor] = current;
                     
-                    if (nodes[neighbor] == null) {
-                        nodes[neighbor] = frontier.push(fScore, neighbor);
-                    } else {
-                        frontier.decreaseKey(nodes[neighbor], fScore);
+                    if (!visited[neighbor]) {
+                        double fScore = gScores[neighbor] + heuristics(locs[neighbor], target);
+                        if (nodes[neighbor] == null) {
+                            nodes[neighbor] = frontier.push(fScore, neighbor);
+                        } else {
+                            frontier.decreaseKey(nodes[neighbor], fScore);
+                        }
                     }
                 }
             }
@@ -104,7 +112,6 @@ public strictfp class AStarSearch extends RobotPlayer {
             currentIdx = prevIdx;
             currentLoc = prevLoc;
         }
-        System.out.println(res);
         return res;
     }
 

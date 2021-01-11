@@ -2,12 +2,12 @@ package ourplayer.utils;
 
 public class LinkedListPQ {
     public static class Node {
-        public int key;
+        public double key;
         public int value;
         public Node next;
         public Node prev;
 
-        public Node(int key, int value, Node next, Node prev) {
+        public Node(double key, int value, Node next, Node prev) {
             this.key = key;
             this.value = value;
             this.next = next;
@@ -27,7 +27,7 @@ public class LinkedListPQ {
         return this.head == null;
     }
 
-    public Node push(int key, int value) {
+    public Node push(double key, int value) {
         Node node = new Node(key, value, this.head, null);
         if (this.head != null) {
             this.head.prev = node;
@@ -43,7 +43,7 @@ public class LinkedListPQ {
         return node;
     }
 
-    public void decreaseKey(Node node, int key) {
+    public void decreaseKey(Node node, double key) {
         node.key = key;
         if (this.min != null && node.key < this.min.key) {
             this.min = node;
@@ -54,7 +54,8 @@ public class LinkedListPQ {
         int res = this.min.value;
 
         if (this.min.prev != null && this.min.next != null) {
-            this.min.prev.next = this.min.next.prev;
+            this.min.prev.next = this.min.next;
+            this.min.next.prev = this.min.prev;
         } else if (this.min.prev != null) {
             this.min.prev.next = null;
         } else if (this.min.next != null) {
