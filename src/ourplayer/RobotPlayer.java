@@ -324,4 +324,12 @@ public strictfp class RobotPlayer {
         // cross product
 
     }
+
+    protected static int locToFlag(MapLocation spawnEC, MapLocation target) {
+        return (((target.y - spawnEC.y + 63) & 0x7f) << 7) | ((target.x - spawnEC.x + 63) & 0x7f);
+    }
+
+    protected static MapLocation flagToLoc(int flag, MapLocation spawnEC) {
+        return new MapLocation(spawnEC.x + ((flag % 0x80) - 63), spawnEC.y + ((flag >>> 7) - 63));
+    }
 }
