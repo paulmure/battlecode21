@@ -44,13 +44,19 @@ public class Politician extends RobotPlayer implements RoleController {
     }
 
     public Politician(MapLocation ec, int ecID, double ecP) throws GameActionException{
-        this();
         // shut the fuck
         spawnEC = ec;
 
         spawnECid = ecID;
         ecPassability = ecP;
         // System.out.println("joe mama: " + ec);
+
+        spawnRound = rc.getRoundNum();
+        maxRadius = 60;
+
+        // set spawnEC
+
+        maxRadius = minRadius + ecPassability * passabilityMultiplier;
     }
 
     private double getTargetRadius() {

@@ -28,6 +28,7 @@ public class Slanderer extends RobotPlayer implements RoleController {
     }
 
     final int minRadius = 10;
+    final int initialEndRadius2 = 6;
     final double passabilityMultiplier = 55; // change this to change outer radius^2
     private double endRadius2;
     private double beginRadius2;
@@ -99,22 +100,10 @@ public class Slanderer extends RobotPlayer implements RoleController {
     }
 
     private double calculateTargetRadius2() {
-
-        // ((double) age * endRadius2) / 300
-
-        // for (int x = -6; x <= 6; x++) {
-        // for (int y = -6; y <= 6; y++) {
-
-        // if (x * x + y * y <= 40 && x * x + y * y >= 32) {
-        // MapLocation thisLocation = new MapLocation(spawnEC.x+x, spawnEC.y+y);
-
-        // rc.setIndicatorDot(thisLocation, 50, 205, 50);
-        // // System.out.println("drawn dot at "+thisLocation);
-
-        // }
-        // }
-        // }
-        // return ((double) age * endRadius2) / 300;
-        return (((double) endRadius2 - beginRadius2) / 300 * age) + beginRadius2;
+        double currentEndRadius2 = endRadius2;
+        if (rc.getRoundNum() < 600) {
+            currentEndRadius2 = ((double) endRadius2 - initialEndRadius2) / 600 * rc.getRoundNum() + initialEndRadius2;
+        }
+        return (((double) currentEndRadius2 - beginRadius2) / 300 * age) + beginRadius2;
     }
 }

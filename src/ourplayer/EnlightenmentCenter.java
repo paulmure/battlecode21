@@ -12,7 +12,10 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
             431, 463, 497, 532, 568, 605, 643, 683, 724, 766, 810, 855, 902, 949, Integer.MAX_VALUE };
     int spawnTurn;
     int age;
-    int startBiddingRound = 100;
+    int startBiddingRound = 300;
+    double politiciansPerSlanderer = 0.4;
+    int slanderersBuilt = 0;
+    int politiciansBuilt = 0;
 
     public EnlightenmentCenter() {
         activeSlanderers = new LinkedList<Integer>();
@@ -49,31 +52,33 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         }
         int bestSlanderer = idealSlandererInfluence[index];
 
-        // if (spawnTurn == 0) {
-        // for (int i = 0; i < 8; i++) {
-        // if (rc.getRoundNum() < 300 && rc.getRoundNum() % 3 == 0) {
-        // if (tryBuildRobot(RobotType.POLITICIAN, dir, 75)) {
-        // break;
-        // }
-        // } else {
-        // if (tryBuildRobot(RobotType.SLANDERER, dir, bestSlanderer)) {
-        // // activeSlanderers.add(bestSlanderer / 20);
-        // // if(activeSlanderers.size() > 50) {
-        // // activeSlanderers.poll();
-        // // }
-        // break;
-        // }
-        // }
-        // dir = dir.rotateRight();
-        // }
-        // } else {
-        for (int i = 0; i < 8; i++) {
-            if (tryBuildRobot(RobotType.MUCKRAKER, dir, rc.getInfluence())) {
-                break;
+        if (spawnTurn == 1) {
+            for (int i = 0; i < 8; i++) {
+                if (rc.getRoundNum() < 300 && slanderersBuilt * politiciansPerSlanderer > politiciansBuilt) {
+                    if (tryBuildRobot(RobotType.POLITICIAN, dir, 11)) {
+                        politiciansBuilt++;
+                        break;
+                    }
+                } else {
+                    if (tryBuildRobot(RobotType.SLANDERER, dir, bestSlanderer)) {
+                        slanderersBuilt++;
+                    // activeSlanderers.add(bestSlanderer / 20);
+                    // if(activeSlanderers.size() > 50) {
+                    // activeSlanderers.poll();
+                    // }
+                        break;
+                    }
+                }
+                dir = dir.rotateRight();
             }
-            dir = dir.rotateRight();
+        } else {
+            for (int i = 0; i < 8; i++) {
+                if (tryBuildRobot(RobotType.MUCKRAKER, dir, rc.getInfluence())) {
+                    break;
+                }
+                dir = dir.rotateRight();
+            }
         }
-        // }
 
         // if (rc.getRoundNum() == 1){
         // tryBuildRobot(RobotType.MUCKRAKER, directions[1], 50);

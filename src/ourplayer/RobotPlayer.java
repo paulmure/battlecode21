@@ -322,6 +322,26 @@ public strictfp class RobotPlayer {
         // hard?: weight moves by how clockwise they are (negative for backwards)
         // "perpendicularity" of vector to ec and vector to move
         // cross product
-
     }
+
+    // protected int locationToFlag(MapLocation spawnECLoc, MapLocation targetLoc) {
+    //     int dx = targetLoc.x - spawnECLoc.x;
+    //     int x_7bit = (dx & 0x3F) | (dx >> 25);
+
+    //     int dy = targetLoc.y - spawnECLoc.y;
+    //     int y_7bit = (dy & 0x3F) | (dy >> 25);
+
+    //     return (x_7bit << 7) | y_7bit;
+    // }
+
+    // protected MapLocation flagToLocation(int flag, MapLocation spawnEC) {
+    //     int dx = flag >>> 17;
+    //     int dy = flag >>> 
+    // }
+
+    // private int signedExtension(int num, int signBit) {
+    //     int abs = num ^ (1 << signBit);
+    //     return abs | (num & )
+    // }
+
 }
