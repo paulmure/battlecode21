@@ -8,7 +8,7 @@ public class Politician extends RobotPlayer implements RoleController {
     final double passabilityMultiplier = 64;
     final double wideningMultiplier = 0.3; // 0.25
     final double wideningExponent = 1; // 0.93
-    final double standingWeight = 0.5;
+    final double standingWeight = 0; // 0.5
     private double maxRadius;
     private MapLocation spawnEC;
     private double ecPassability;
@@ -102,8 +102,8 @@ public class Politician extends RobotPlayer implements RoleController {
 
         if (closestEnemyMuck != null) {
             int d2toMuck = myLoc.distanceSquaredTo(closestEnemyMuck.location);
-            if (d2toMuck <= 2 && rc.canEmpower(d2toMuck)) {// adjacent to
-                rc.empower(d2toMuck);
+            if (d2toMuck <= 2 && rc.canEmpower(9)) {// previously d2muck (adjacent to)
+                rc.empower(9);
             }
             tryMove(getRoughMoveTowards(closestEnemyMuck.location, 2));
         }
@@ -111,8 +111,7 @@ public class Politician extends RobotPlayer implements RoleController {
         Direction bestMove = null;
         if (spawnEC != null) {
             if (rc.getRoundNum() < 300) {
-                bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, getTargetRadius(),
-                        standingWeight / 2);
+                bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, getTargetRadius(), 0);
             } else {
                 bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, getTargetRadius(), standingWeight);
             }
