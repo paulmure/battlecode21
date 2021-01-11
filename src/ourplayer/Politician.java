@@ -17,7 +17,7 @@ public class Politician extends RobotPlayer implements RoleController {
     MapLocation exploreLoc;
     int spawnRound;
 
-    public Politician() throws GameActionException{
+    public Politician() throws GameActionException {
         spawnRound = rc.getRoundNum();
         maxRadius = 60;
 
@@ -39,11 +39,11 @@ public class Politician extends RobotPlayer implements RoleController {
             // System.out.println("Initialized Politician, ID: "+rc.getID()+" EC:
             // "+spawnEC);
 
-        } 
+        }
         maxRadius = minRadius + ecPassability * passabilityMultiplier;
     }
 
-    public Politician(MapLocation ec, int ecID, double ecP) throws GameActionException{
+    public Politician(MapLocation ec, int ecID, double ecP) throws GameActionException {
         // shut the fuck
         spawnEC = ec;
 
@@ -111,7 +111,8 @@ public class Politician extends RobotPlayer implements RoleController {
         Direction bestMove = null;
         if (spawnEC != null) {
             if (rc.getRoundNum() < 300) {
-                bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, getTargetRadius(), 0.0);
+                bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, getTargetRadius(),
+                        standingWeight / 2);
             } else {
                 bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, getTargetRadius(), standingWeight);
             }

@@ -13,6 +13,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     int spawnTurn;
     int age;
     int startBiddingRound = 300;
+    int minBiddingInfluence = 1000;
     double politiciansPerSlanderer = 9;
     int slanderersBuilt = 0;
     int politiciansBuilt = 0;
@@ -62,10 +63,10 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                 } else {
                     if (tryBuildRobot(RobotType.SLANDERER, dir, bestSlanderer)) {
                         slanderersBuilt++;
-                    // activeSlanderers.add(bestSlanderer / 20);
-                    // if(activeSlanderers.size() > 50) {
-                    // activeSlanderers.poll();
-                    // }
+                        // activeSlanderers.add(bestSlanderer / 20);
+                        // if(activeSlanderers.size() > 50) {
+                        // activeSlanderers.poll();
+                        // }
                         break;
                     }
                 }
@@ -86,8 +87,14 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         // if (influence + influencePerTurn > Integer.MAX_VALUE - 500000000){
         // rc.bid(influencePerTurn);
         // }
-        if (rc.getRoundNum() > startBiddingRound){
-            bidder.bid();
+        if (rc.getRoundNum() > startBiddingRound) {
+            if (rc.getInfluence() > minBiddingInfluence) {
+                bidder.bid();
+            } else {
+                if (rc.canBid(1)) {
+                    rc.bid(1);
+                }
+            }
         }
 
         if (rc.getRoundNum() % 50 == 0) {
