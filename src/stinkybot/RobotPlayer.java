@@ -164,11 +164,8 @@ public strictfp class RobotPlayer {
 
         for (RobotInfo potentialTarget : targets) {
             if (potentialTarget.getTeam() != rc.getTeam()) {
-                if (potentialTarget.getType() == RobotType.ENLIGHTENMENT_CENTER) {
-                    enemyEC = potentialTarget.getLocation();
+                rc.setFlag(locToFlag(spawnEC, potentialTarget.getLocation()));
 
-                    rc.setFlag(locToFlag(spawnEC, potentialTarget.getLocation()));
-                }
                 if (potentialTarget.getType() == RobotType.SLANDERER) {
                     exploreLoc = potentialTarget.location;
                     target = potentialTarget;
