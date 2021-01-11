@@ -23,6 +23,7 @@ public strictfp class RobotPlayer {
     static MapLocation spawnEC;
     static int spawnECid;
     static double ecPassability;
+    static boolean imptFlagSet = false;
 
     /**
      * run() is the method that is called when a robot is instantiated in the
@@ -111,17 +112,24 @@ public strictfp class RobotPlayer {
     static void runEnlightenmentCenter() throws GameActionException {
         for (int id : builtMuckrakers) {
             if (rc.canGetFlag(id) && rc.getFlag(id) != 0) {
-                rc.setFlag(rc.getFlag(id));
+                int flag = rc.getFlag(id);
+                if (!imptFlagSet && ((flag >>> 23) & 1) == 1) {
+                    imptFlagSet = true;
+                    rc.setFlag(flag);
+                } else {
+                    rc.setFlag(flag);
+                }
             }
         }
 
-        for (RobotInfo bobotInfo : rc.senseNearbyRobots()) {
+        for (
+
+        RobotInfo bobotInfo : rc.senseNearbyRobots()) {
             builtMuckrakers.add(bobotInfo.ID);
         }
 
         if (rc.canBuildRobot(RobotType.MUCKRAKER, toBuildDirection, 1)) {
             rc.buildRobot(RobotType.MUCKRAKER, toBuildDirection, 1);
-            RobotInfo bobot = rc.senseRobotAtLocation(rc.adjacentLocation(toBuildDirection));
             toBuildDirection = toBuildDirection.rotateRight();
         }
 
@@ -164,8 +172,14 @@ public strictfp class RobotPlayer {
 
         for (RobotInfo potentialTarget : targets) {
             if (potentialTarget.getTeam() != rc.getTeam()) {
-                rc.setFlag(locToFlag(spawnEC, potentialTarget.getLocation()));
-
+                if (potentialTarget.getType() == RobotType.SLANDERER
+                        || potentialTarget.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                    int flag = locToFlag(spawnEC, potentialTarget.getLocation());
+                    if (potentialTarget.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                        flag |= (1 << 23);
+                    }
+                    rc.setFlag(flag);
+                }
                 if (potentialTarget.getType() == RobotType.SLANDERER) {
                     exploreLoc = potentialTarget.location;
                     target = potentialTarget;
@@ -223,7 +237,7 @@ public strictfp class RobotPlayer {
     }
 
     protected static MapLocation flagToLoc(int flag, MapLocation spawnEC) {
-        return new MapLocation(spawnEC.x + (flag % 0x80) - 63, spawnEC.y + (flag >> 7) - 63);
+        return new MapLocation(spawnEC.x + (flag & 0x7F) - 63, spawnEC.y + ((flag >> 7) & 0x7F) - 63);
     }
 
     protected static Direction getRoughMoveTowards(MapLocation target, int depth) throws GameActionException {
