@@ -13,8 +13,8 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     int spawnTurn;
     int age;
     int startBiddingRound = 300;
-    int minBiddingInfluence = 1000;
-    double politiciansPerSlanderer = 6;
+    int minBiddingInfluence = 500;
+    double politiciansPerSlanderer = 8;
     int slanderersBuilt = 0;
     int politiciansBuilt = 0;
 
@@ -62,6 +62,12 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                     }
                 } else if (rc.getRoundNum() < 600
                         && slanderersBuilt * (politiciansPerSlanderer / 2) > politiciansBuilt) {
+                    if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100)) {
+                        politiciansBuilt++;
+                        break;
+                    }
+                } else if (rc.getRoundNum() < 900
+                        && slanderersBuilt * (politiciansPerSlanderer / 4) > politiciansBuilt) {
                     if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100)) {
                         politiciansBuilt++;
                         break;

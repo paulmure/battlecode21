@@ -90,20 +90,27 @@ public class Politician extends RobotPlayer implements RoleController {
             age = rc.getRoundNum() - Math.max(spawnRound, 300);
         }
 
+        int mucksInRange = 0;
         RobotInfo closestEnemyMuck = null;
         int closestMuckDist = 1000;
         for (RobotInfo r : nearbyRobots) {
-            if (r.type.equals(RobotType.MUCKRAKER) && !r.team.equals(rc.getTeam())
-                    && chebyshevDistance(myLoc, r.location) < closestMuckDist) {
-                closestEnemyMuck = r;
-                closestMuckDist = chebyshevDistance(myLoc, r.location);
+            if (r.type.equals(RobotType.MUCKRAKER) && !r.team.equals(rc.getTeam())) {
+                if (myLoc.distanceSquaredTo(r.location) <= 9) {
+                    mucksInRange++;
+                }
+                if (chebyshevDistance(myLoc, r.location) < closestMuckDist) {
+                    closestEnemyMuck = r;
+                    closestMuckDist = chebyshevDistance(myLoc, r.location);
+                }
             }
         }
 
         if (closestEnemyMuck != null) {
             int d2toMuck = myLoc.distanceSquaredTo(closestEnemyMuck.location);
-            if (d2toMuck <= 2 && rc.canEmpower(9)) {// previously d2muck (adjacent to)
+            if (rc.canEmpower(9) && mucksInRange > 1) {// previously d2muck (adjacent to)
                 rc.empower(9);
+            } else if (rc.canEmpower(2) && d2toMuck <= 2) {
+                rc.empower(2);
             }
             tryMove(getRoughMoveTowards(closestEnemyMuck.location, 2));
         }
