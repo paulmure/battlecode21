@@ -274,7 +274,7 @@ public strictfp class RobotPlayer {
         }
 
         double bestDot = 0.0;
-        Direction bestDir = Direction.CENTER;
+        Direction bestDir = randomDirection();
         for(Direction d : getPossibleMoves()) {
             //dot product for closest match??
             double dot = -(d.dx * totalDX + d.dy * totalDY);

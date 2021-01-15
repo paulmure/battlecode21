@@ -67,6 +67,14 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         //     slanderers.remove(id);
         // }
 
+        boolean nearbyEnemies = false;
+        for (RobotInfo r : rc.senseNearbyRobots()) {
+            if (r.team.equals(rc.getTeam().opponent())) {
+                nearbyEnemies = true;
+                break;
+            }
+        }
+
         int index = idealSlandererInfluence.length - 1;
         while (idealSlandererInfluence[index] > influence) {
             --index;
@@ -93,7 +101,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                         politiciansBuilt++;
                         break;
                     }
-                } else {
+                } else if (nearbyEnemies == false || spawnTurn == 1) {
                     if (tryBuildRobot(RobotType.SLANDERER, dir, bestSlanderer)) {
                         slanderersBuilt++;
                         // activeSlanderers.add(bestSlanderer / 20);
@@ -103,7 +111,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                         break;
                     }
                 }
-                // tryBuildRobot(RobotType.MUCKRAKER, dir, 1);
+                tryBuildRobot(RobotType.MUCKRAKER, dir, 1);
                 dir = dir.rotateRight();
             }
         // } else {
