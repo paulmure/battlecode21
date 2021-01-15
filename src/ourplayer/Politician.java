@@ -1,5 +1,7 @@
 package ourplayer;
 
+import java.util.ArrayList;
+
 import battlecode.common.*;
 
 public class Politician extends RobotPlayer implements RoleController {
@@ -93,6 +95,7 @@ public class Politician extends RobotPlayer implements RoleController {
         int mucksInRange = 0;
         RobotInfo closestEnemyMuck = null;
         int closestMuckDist = 1000;
+        ArrayList<MapLocation> allies = new ArrayList<MapLocation>();
         for (RobotInfo r : nearbyRobots) {
             if (r.type.equals(RobotType.MUCKRAKER) && !r.team.equals(rc.getTeam())) {
                 if (myLoc.distanceSquaredTo(r.location) <= 9) {
@@ -102,6 +105,9 @@ public class Politician extends RobotPlayer implements RoleController {
                     closestEnemyMuck = r;
                     closestMuckDist = chebyshevDistance(myLoc, r.location);
                 }
+            }
+            if (r.team.equals(rc.getTeam()) && r.type.equals(RobotType.POLITICIAN)) {
+                allies.add(r.location);
             }
         }
 
@@ -117,11 +123,11 @@ public class Politician extends RobotPlayer implements RoleController {
 
         Direction bestMove = null;
         if (spawnEC != null) {
-            if (rc.getRoundNum() < 300) {
-                bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, getTargetRadius(), 0);
-            } else {
-                bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, getTargetRadius(), standingWeight);
-            }
+            //if (rc.getRoundNum() < 300) {
+                bestMove = getBestCloud(getPossibleMoves(false, spawnEC), spawnEC, getTargetRadius(), allies);
+            // } else {
+            //     bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, getTargetRadius(), standingWeight);
+            // }
         }
 
         if (bestMove != null) {

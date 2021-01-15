@@ -259,6 +259,108 @@ public strictfp class RobotPlayer {
         return possibleMoves;
     }
 
+    protected Direction getBestSpacing(ArrayList<MapLocation> allies) {
+        MapLocation myLoc = rc.getLocation();
+        
+        double totalDX = 0;
+        double totalDY = 0;
+        for (MapLocation loc : allies) {
+            int dx = loc.x - myLoc.x;
+            int dy = loc.y - myLoc.y;
+
+            double forceVecMagicNumber = Math.pow(dx*dx + dy*dy, 3.0/2);
+            totalDX +=dx/forceVecMagicNumber;
+            totalDY += dy/forceVecMagicNumber;
+        }
+
+        double bestDot = 0.0;
+        Direction bestDir = Direction.CENTER;
+        for(Direction d : getPossibleMoves()) {
+            //dot product for closest match??
+            double dot = -(d.dx * totalDX + d.dy * totalDY);
+            if (dot > bestDot) {
+                bestDot = dot;
+                bestDir = d;
+            }
+        }
+        return bestDir;
+    }
+
+    protected Direction getBestCloud(ArrayList<Direction> possibleMoves, MapLocation spawnEC, double targetRadius,
+        ArrayList<MapLocation> allies) {
+        // ~~~~~~~~ MODIFY THESE TO CHANGE PRIORITIZATION ~~~~~~~~~//
+        // double kRadius = 0.5f;
+        // double kClockwise = 0.5f;
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+
+        // System.out.println("spawnEC: "+spawnEC);
+        int ecVecX = rc.getLocation().x - spawnEC.x;
+        int ecVecY = rc.getLocation().y - spawnEC.y;
+        double ecVecLength = Math.sqrt(ecVecX * ecVecX + ecVecY * ecVecY);
+
+        int targetVecX = 0;
+        int targetVecY = 0;
+        double targetVecLength = 1;
+
+        MapLocation myLoc = rc.getLocation();
+        
+        double totalDX = 0;
+        double totalDY = 0;
+        for (MapLocation loc : allies) {
+            int dx = loc.x - myLoc.x;
+            int dy = loc.y - myLoc.y;
+
+            double forceVecMagicNumber = Math.pow(dx*dx + dy*dy, 3.0/2);
+            totalDX +=dx/forceVecMagicNumber;
+            totalDY += dy/forceVecMagicNumber;
+        }
+        // a standing weight of 1 treats standing still as a perfectly perpendicular
+        // move, 0 is a perfectly parallel
+        double bestWeight = Integer.MIN_VALUE;
+        Direction bestDirection = null;
+
+        for (Direction d : possibleMoves) {
+
+            // System.out.println("DIRECTION: "+d);
+            // System.out.println("targetX: " + targetVecX + " dx: " + d.dx);
+            // System.out.println("targetY: " + targetVecY + " dy: " + d.dy);
+            targetVecX = d.dx;
+            targetVecY = d.dy;
+            targetVecLength = Math.sqrt(targetVecX * targetVecX + targetVecY * targetVecY);
+
+            // to calculate r^2 to given move, use the current pos (ecVec) and add the
+            // move's vector (targetVec), then r^2 it
+            int moveR2 = (int) (Math.pow(ecVecX + targetVecX, 2) + Math.pow(ecVecY + targetVecY, 2));
+            double deltaR2 = Math.abs(targetRadius - moveR2);
+            // equation here for adjustment :
+            // y = 1 / (ax + 1)
+            // adjust a to produce steeper or smoother down
+            double r2Weight = 1 / (1 + deltaR2); // (0, 1]
+
+            double totalWeight = r2Weight + -0.5*(d.dx * totalDX + d.dy * totalDY);
+
+            if (totalWeight > bestWeight) {
+                bestWeight = totalWeight;
+                bestDirection = d;
+            }
+        }
+        return bestDirection;
+
+        // step 1: turn directions into weighted edge graph where weight = desirablility
+        // of possible move, weight (1 ... -1)
+
+        // step 2: weight graph including a 0 cost path to itself
+        // step 3: choose path of lowest cost
+        // will prioritize standing still over moving backwards
+
+        // obstacles:
+        // easy: prioritize radius
+        // hard?: weight moves by how clockwise they are (negative for backwards)
+        // "perpendicularity" of vector to ec and vector to move
+        // cross product
+    }
+
+
     // Get best possible move to form a vortex
     // currently implements a switch back and forth in
     // the direction of rotation, from widdershins to deisul
