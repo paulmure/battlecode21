@@ -10,7 +10,7 @@ public class Politician extends RobotPlayer implements RoleController {
     final double passabilityMultiplier = 64;
     final double wideningMultiplier = 0.3; // 0.25
     final double wideningExponent = 1; // 0.93
-    final double standingWeight = 0.5;
+    final double standingWeight = 0; // 0.5
     private double maxRadius;
     private MapLocation spawnEC;
     private double ecPassability;
@@ -19,7 +19,7 @@ public class Politician extends RobotPlayer implements RoleController {
     MapLocation exploreLoc;
     int spawnRound;
 
-    public Politician() throws GameActionException{
+    public Politician() throws GameActionException {
         spawnRound = rc.getRoundNum();
         maxRadius = 60;
 
@@ -41,11 +41,11 @@ public class Politician extends RobotPlayer implements RoleController {
             // System.out.println("Initialized Politician, ID: "+rc.getID()+" EC:
             // "+spawnEC);
 
-        } 
+        }
         maxRadius = minRadius + ecPassability * passabilityMultiplier;
     }
 
-    public Politician(MapLocation ec, int ecID, double ecP) throws GameActionException{
+    public Politician(MapLocation ec, int ecID, double ecP) throws GameActionException {
         // shut the fuck
         spawnEC = ec;
 
@@ -92,14 +92,19 @@ public class Politician extends RobotPlayer implements RoleController {
             age = rc.getRoundNum() - Math.max(spawnRound, 300);
         }
 
+        int mucksInRange = 0;
         RobotInfo closestEnemyMuck = null;
         int closestMuckDist = 1000;
         ArrayList<MapLocation> allies = new ArrayList<MapLocation>();
         for (RobotInfo r : nearbyRobots) {
-            if (r.type.equals(RobotType.MUCKRAKER) && !r.team.equals(rc.getTeam())
-                    && chebyshevDistance(myLoc, r.location) < closestMuckDist) {
-                closestEnemyMuck = r;
-                closestMuckDist = chebyshevDistance(myLoc, r.location);
+            if (r.type.equals(RobotType.MUCKRAKER) && !r.team.equals(rc.getTeam())) {
+                if (myLoc.distanceSquaredTo(r.location) <= 9) {
+                    mucksInRange++;
+                }
+                if (chebyshevDistance(myLoc, r.location) < closestMuckDist) {
+                    closestEnemyMuck = r;
+                    closestMuckDist = chebyshevDistance(myLoc, r.location);
+                }
             }
             if (r.team.equals(rc.getTeam()) && r.type.equals(RobotType.POLITICIAN)) {
                 allies.add(r.location);
@@ -108,8 +113,10 @@ public class Politician extends RobotPlayer implements RoleController {
 
         if (closestEnemyMuck != null) {
             int d2toMuck = myLoc.distanceSquaredTo(closestEnemyMuck.location);
-            if (d2toMuck <= 2 && rc.canEmpower(d2toMuck)) {// adjacent to
-                rc.empower(d2toMuck);
+            if (rc.canEmpower(9) && mucksInRange > 1) {// previously d2muck (adjacent to)
+                rc.empower(9);
+            } else if (rc.canEmpower(2) && d2toMuck <= 2) {
+                rc.empower(2);
             }
             tryMove(getRoughMoveTowards(closestEnemyMuck.location, 2));
         }

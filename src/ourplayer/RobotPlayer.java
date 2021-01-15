@@ -234,13 +234,15 @@ public strictfp class RobotPlayer {
         ArrayList<Direction> possibleMoves = new ArrayList<>();
         for (Direction d : Direction.values()) {
             if (rc.canMove(d)) {
-                if (!highwayEnab) {
-                    if (!isOnHwy(new MapLocation(rc.getLocation().x + d.dx, rc.getLocation().y + d.dy), ec)) {
-                        possibleMoves.add(d);
-                    }
-                } else {
-                    possibleMoves.add(d);
-                }
+                // if (!highwayEnab) {
+                // if (!isOnHwy(new MapLocation(rc.getLocation().x + d.dx, rc.getLocation().y +
+                // d.dy), ec)) {
+                // possibleMoves.add(d);
+                // }
+                // } else {
+                // possibleMoves.add(d);
+                // }
+                possibleMoves.add(d);
             }
         }
         return possibleMoves;
@@ -364,10 +366,6 @@ public strictfp class RobotPlayer {
     // the direction of rotation, from widdershins to deisul
     protected Direction getBestVortex(ArrayList<Direction> possibleMoves, MapLocation spawnEC, double targetRadius,
             double standingWeight) {
-        // ~~~~~~~~ MODIFY THESE TO CHANGE PRIORITIZATION ~~~~~~~~~//
-        // double kRadius = 0.5f;
-        // double kClockwise = 0.5f;
-        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
         // System.out.println("spawnEC: "+spawnEC);
         int ecVecX = rc.getLocation().x - spawnEC.x;
@@ -433,4 +431,5 @@ public strictfp class RobotPlayer {
     protected static MapLocation flagToLoc(int flag, MapLocation spawnEC) {
         return new MapLocation(spawnEC.x + ((flag % 0x80) - 63), spawnEC.y + ((flag >>> 7) - 63));
     }
+
 }

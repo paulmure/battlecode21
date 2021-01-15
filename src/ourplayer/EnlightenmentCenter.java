@@ -13,7 +13,8 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     int spawnTurn;
     int age;
     int startBiddingRound = 300;
-    double politiciansPerSlanderer = 9;
+    int minBiddingInfluence = 500;
+    double politiciansPerSlanderer = 8;
     int slanderersBuilt = 0;
     int politiciansBuilt = 0;
 
@@ -38,18 +39,30 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
 
         // if (spawnTurn == 1) {
             for (int i = 0; i < 8; i++) {
-                if (rc.getRoundNum() < 400 && slanderersBuilt * politiciansPerSlanderer > politiciansBuilt) {
-                    if (tryBuildRobot(RobotType.POLITICIAN, dir, 15)) {
+                if (rc.getRoundNum() < 300 && slanderersBuilt * politiciansPerSlanderer > politiciansBuilt) {
+                    if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100)) {
+                        politiciansBuilt++;
+                        break;
+                    }
+                } else if (rc.getRoundNum() < 600
+                        && slanderersBuilt * (politiciansPerSlanderer / 2) > politiciansBuilt) {
+                    if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100)) {
+                        politiciansBuilt++;
+                        break;
+                    }
+                } else if (rc.getRoundNum() < 900
+                        && slanderersBuilt * (politiciansPerSlanderer / 4) > politiciansBuilt) {
+                    if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100)) {
                         politiciansBuilt++;
                         break;
                     }
                 } else {
                     if (tryBuildRobot(RobotType.SLANDERER, dir, bestSlanderer)) {
                         slanderersBuilt++;
-                    // activeSlanderers.add(bestSlanderer / 20);
-                    // if(activeSlanderers.size() > 50) {
-                    // activeSlanderers.poll();
-                    // }
+                        // activeSlanderers.add(bestSlanderer / 20);
+                        // if(activeSlanderers.size() > 50) {
+                        // activeSlanderers.poll();
+                        // }
                         break;
                     }
                 }
@@ -71,9 +84,15 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         // if (influence + influencePerTurn > Integer.MAX_VALUE - 500000000){
         // rc.bid(influencePerTurn);
         // }
-        // if (rc.getRoundNum() > startBiddingRound){
-        //     bidder.bid();
-        // }
+        if (rc.getRoundNum() > startBiddingRound) {
+            if (rc.getInfluence() > minBiddingInfluence) {
+                bidder.bid();
+            } else {
+                if (rc.canBid(1)) {
+                    rc.bid(1);
+                }
+            }
+        }
 
         if (rc.getRoundNum() % 50 == 0) {
             System.out.println("I have " + influence + " influence on round " + rc.getRoundNum());

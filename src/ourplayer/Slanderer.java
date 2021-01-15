@@ -7,7 +7,6 @@ import battlecode.common.*;
 public class Slanderer extends RobotPlayer implements RoleController {
 
     private int age;
-
     private MapLocation spawnEC = null;
 
     public MapLocation getSpawnEc() {
@@ -27,17 +26,16 @@ public class Slanderer extends RobotPlayer implements RoleController {
         return ecPassability;
     }
 
-    final int minRadius = 10;
+    final int minRadius = 5;
     final int initialEndRadius2 = 6;
     final double passabilityMultiplier = 55; // change this to change outer radius^2
-    private double endRadius2;
-    private double beginRadius2;
+    private double endRadius2 = 35;
+    private double beginRadius2 = 4;
 
     public Slanderer() throws GameActionException {
         age = 0;
-        endRadius2 = 35;
+
         // change this to change the inner radius^2
-        beginRadius2 = 4;
 
         // set spawnEC
         RobotInfo[] nearby = rc.senseNearbyRobots();
