@@ -25,22 +25,6 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
 
     public void run() throws GameActionException {
         age = rc.getRoundNum() - spawnTurn;
-        // RobotType toBuild = RobotType.SLANDERER;
-
-        // FIRST TIME
-        /*
-         * MapLocation loc = rc.getLocation();
-         * 
-         * for (int x = -6; x <= 6; x++) { for (int y = -6; y <= 6; y++) {
-         * 
-         * if (x * x + y * y <= 40 && x * x + y * y >= 32) { MapLocation thisLocation =
-         * new MapLocation(rc.getLocation().x + x, rc.getLocation().y + y);
-         * 
-         * rc.setIndicatorDot(thisLocation, 50, 205, 50); //
-         * System.out.println("drawn dot at "+thisLocation);
-         * 
-         * } } }
-         */
 
         int influence = rc.getInfluence();
 
@@ -52,7 +36,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         }
         int bestSlanderer = idealSlandererInfluence[index];
 
-        if (spawnTurn == 1) {
+        // if (spawnTurn == 1) {
             for (int i = 0; i < 8; i++) {
                 if (rc.getRoundNum() < 400 && slanderersBuilt * politiciansPerSlanderer > politiciansBuilt) {
                     if (tryBuildRobot(RobotType.POLITICIAN, dir, 15)) {
@@ -69,16 +53,17 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                         break;
                     }
                 }
+                // tryBuildRobot(RobotType.MUCKRAKER, dir, 1);
                 dir = dir.rotateRight();
             }
-        } else {
-            for (int i = 0; i < 8; i++) {
-                if (tryBuildRobot(RobotType.MUCKRAKER, dir, rc.getInfluence())) {
-                    break;
-                }
-                dir = dir.rotateRight();
-            }
-        }
+        // } else {
+        //     for (int i = 0; i < 8; i++) {
+        //         if (tryBuildRobot(RobotType.MUCKRAKER, dir, rc.getInfluence())) {
+        //             break;
+        //         }
+        //         dir = dir.rotateRight();
+        //     }
+        // }
 
         // if (rc.getRoundNum() == 1){
         // tryBuildRobot(RobotType.MUCKRAKER, directions[1], 50);
@@ -86,9 +71,9 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         // if (influence + influencePerTurn > Integer.MAX_VALUE - 500000000){
         // rc.bid(influencePerTurn);
         // }
-        if (rc.getRoundNum() > startBiddingRound){
-            bidder.bid();
-        }
+        // if (rc.getRoundNum() > startBiddingRound){
+        //     bidder.bid();
+        // }
 
         if (rc.getRoundNum() % 50 == 0) {
             System.out.println("I have " + influence + " influence on round " + rc.getRoundNum());

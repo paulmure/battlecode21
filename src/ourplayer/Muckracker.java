@@ -1,5 +1,7 @@
 package ourplayer;
 
+import java.util.ArrayList;
+
 import battlecode.common.*;
 
 public class Muckracker extends RobotPlayer implements RoleController {
@@ -8,23 +10,19 @@ public class Muckracker extends RobotPlayer implements RoleController {
     MapLocation newLoc;
 
     public void run() throws GameActionException {
-        System.out.println("starting a*");
-        loc = rc.getLocation();
-        newLoc = new MapLocation(loc.x + 2, loc.y + 5);
-        System.out.printf("bytecode used before initializing AStarSearch object:%d\n", Clock.getBytecodeNum());
-        AStarSearch aStar = new AStarSearch(newLoc);
-        aStar.findPath();
-        System.out.printf("bytecode used after AStarSearch:%d\n", Clock.getBytecodeNum());
-
         MapLocation myLoc = rc.getLocation();
 
         RobotInfo closestEnemySlanderer = null;
         int closestSlandererDist = 1000;
+        ArrayList<MapLocation> allies = new ArrayList<MapLocation>();
         for (RobotInfo r : rc.senseNearbyRobots()) {
             if (r.type.equals(RobotType.SLANDERER) && !r.team.equals(rc.getTeam())
                     && chebyshevDistance(myLoc, r.location) < closestSlandererDist) {
                 closestEnemySlanderer = r;
                 closestSlandererDist = chebyshevDistance(myLoc, r.location);
+            }
+            if (r.team.equals(rc.getTeam()) && r.type.equals(RobotType.MUCKRAKER)) {
+                allies.add(r.location);
             }
         }
 
@@ -35,6 +33,7 @@ public class Muckracker extends RobotPlayer implements RoleController {
             tryMove(getRoughMoveTowards(closestEnemySlanderer.location, 2));
         }
 
+        tryMove(getBestSpacing(allies));
         // if (!foundPath) {
         // loc = rc.getLocation();
         // if (rc.getTeam().equals(Team.A)) {

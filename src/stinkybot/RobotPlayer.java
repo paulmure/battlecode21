@@ -171,7 +171,7 @@ public strictfp class RobotPlayer {
         }
 
         for (RobotInfo potentialTarget : targets) {
-            if (potentialTarget.getTeam() != rc.getTeam()) {
+            if (potentialTarget.getTeam() == rc.getTeam().opponent()) {
                 if (potentialTarget.getType() == RobotType.SLANDERER
                         || potentialTarget.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                     int flag = locToFlag(spawnEC, potentialTarget.getLocation());
