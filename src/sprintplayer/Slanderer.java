@@ -1,4 +1,4 @@
-package ourplayer;
+package sprintplayer;
 
 import java.util.ArrayList;
 
@@ -56,7 +56,6 @@ public class Slanderer extends RobotPlayer implements RoleController {
         MapLocation myLoc = rc.getLocation();
         RobotInfo closestEnemyMuck = null;
         int closestMuckDist = 1000;
-        rc.setFlag(420); //this is funny because its the weed number
         for (RobotInfo r : rc.senseNearbyRobots()) {
             if (r.type.equals(RobotType.MUCKRAKER) && !r.team.equals(rc.getTeam())
                     && chebyshevDistance(myLoc, r.location) < closestMuckDist) {

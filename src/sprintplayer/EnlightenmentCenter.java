@@ -1,8 +1,6 @@
-package ourplayer;
+package sprintplayer;
 
-import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashSet;
 import java.util.LinkedList;
 
 import battlecode.common.*;
@@ -19,8 +17,6 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     double politiciansPerSlanderer = 8;
     int slanderersBuilt = 0;
     int politiciansBuilt = 0;
-    HashSet<Integer> politicians = new HashSet<Integer>();
-    HashSet<Integer> slanderers = new HashSet<Integer>();
 
     public EnlightenmentCenter() {
         activeSlanderers = new LinkedList<Integer>();
@@ -30,42 +26,26 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
 
     public void run() throws GameActionException {
         age = rc.getRoundNum() - spawnTurn;
+        // RobotType toBuild = RobotType.SLANDERER;
+
+        // FIRST TIME
+        /*
+         * MapLocation loc = rc.getLocation();
+         * 
+         * for (int x = -6; x <= 6; x++) { for (int y = -6; y <= 6; y++) {
+         * 
+         * if (x * x + y * y <= 40 && x * x + y * y >= 32) { MapLocation thisLocation =
+         * new MapLocation(rc.getLocation().x + x, rc.getLocation().y + y);
+         * 
+         * rc.setIndicatorDot(thisLocation, 50, 205, 50); //
+         * System.out.println("drawn dot at "+thisLocation);
+         * 
+         * } } }
+         */
 
         int influence = rc.getInfluence();
 
         Direction dir = randomDirection();
-
-        MapLocation myLoc = rc.getLocation();
-
-        /*** This works but default HashSet is too slow, this is a certified Paul moment ***/
-        // ArrayList<Integer> deadPoliticians = new ArrayList<Integer>();
-        // for (Integer id : politicians) {
-        //     if (rc.canGetFlag(id)) {
-        //         int flag = rc.getFlag(id);
-        //         if (flag != 0) {
-        //             int influenceComponent = flag >>> 15;
-        //             int enemyComponent = (flag >>> 14) % 2;
-        //             MapLocation ecLoc = flagToLoc(flag % 0x4000, myLoc);
-        //             // System.out.println((enemyComponent == 1 ? "Enemy" : "Neutral") + " EC at " 
-        //             //     + ecLoc.x + ", " + ecLoc.y + " has " + influenceComponent + " influence.");
-        //         }
-        //     } else {
-        //         deadPoliticians.add(id);
-        //     }
-        // }
-        // for (Integer id : deadPoliticians) {
-        //     politicians.remove(id);
-        // }
-
-        // ArrayList<Integer> deadSlanderers = new ArrayList<Integer>();
-        // for (Integer id : slanderers) {
-        //     if (!rc.canGetFlag(id)) {
-        //         // deadSlanderers.add(id);
-        //     }
-        // }
-        // for (Integer id : deadSlanderers) {
-        //     slanderers.remove(id);
-        // }
 
         int index = idealSlandererInfluence.length - 1;
         while (idealSlandererInfluence[index] > influence) {
@@ -73,10 +53,9 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         }
         int bestSlanderer = idealSlandererInfluence[index];
 
-        // if (spawnTurn == 1) {
+        if (spawnTurn == 1) {
             for (int i = 0; i < 8; i++) {
-                //if (rc.getRoundNum() < 300 && slanderers.size() * politiciansPerSlanderer > politicians.size()) {
-                if (rc.getRoundNum() < 300 && slanderersBuilt * politiciansPerSlanderer > politiciansBuilt) {    
+                if (rc.getRoundNum() < 300 && slanderersBuilt * politiciansPerSlanderer > politiciansBuilt) {
                     if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100)) {
                         politiciansBuilt++;
                         break;
@@ -103,17 +82,16 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                         break;
                     }
                 }
-                // tryBuildRobot(RobotType.MUCKRAKER, dir, 1);
                 dir = dir.rotateRight();
             }
-        // } else {
-        //     for (int i = 0; i < 8; i++) {
-        //         if (tryBuildRobot(RobotType.MUCKRAKER, dir, rc.getInfluence())) {
-        //             break;
-        //         }
-        //         dir = dir.rotateRight();
-        //     }
-        // }
+        } else {
+            for (int i = 0; i < 8; i++) {
+                if (tryBuildRobot(RobotType.MUCKRAKER, dir, rc.getInfluence())) {
+                    break;
+                }
+                dir = dir.rotateRight();
+            }
+        }
 
         // if (rc.getRoundNum() == 1){
         // tryBuildRobot(RobotType.MUCKRAKER, directions[1], 50);
@@ -123,26 +101,13 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         // }
         if (rc.getRoundNum() > startBiddingRound) {
             if (rc.getInfluence() > minBiddingInfluence) {
-                 bidder.bid();
+                bidder.bid();
             } else {
                 if (rc.canBid(1)) {
                     rc.bid(1);
                 }
             }
         }
-
-        /*** Adds to the too slow HashSets ***/
-        // for (Direction d : directions) {
-        //     if (rc.onTheMap(rc.adjacentLocation(d))) {
-        //         RobotInfo r = rc.senseRobotAtLocation(rc.adjacentLocation(d));
-        //         if (r != null && r.team.equals(rc.getTeam())) {
-        //             if (r.type.equals(RobotType.POLITICIAN)) {
-        //                 politicians.add(r.ID);
-        //             } else if (r.type.equals(RobotType.SLANDERER)) {
-        //                 slanderers.add(r.ID);
-        //             }
-        //         }
-        // }
 
         if (rc.getRoundNum() % 50 == 0) {
             System.out.println("I have " + influence + " influence on round " + rc.getRoundNum());

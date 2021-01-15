@@ -1,6 +1,4 @@
-package ourplayer;
-
-import java.util.ArrayList;
+package sprintplayer;
 
 import battlecode.common.*;
 
@@ -95,9 +93,6 @@ public class Politician extends RobotPlayer implements RoleController {
         int mucksInRange = 0;
         RobotInfo closestEnemyMuck = null;
         int closestMuckDist = 1000;
-        RobotInfo notOurEC = null;
-        int closestECDist = 1000;
-        ArrayList<MapLocation> allies = new ArrayList<MapLocation>();
         for (RobotInfo r : nearbyRobots) {
             if (r.type.equals(RobotType.MUCKRAKER) && !r.team.equals(rc.getTeam())) {
                 if (myLoc.distanceSquaredTo(r.location) <= 9) {
@@ -108,52 +103,25 @@ public class Politician extends RobotPlayer implements RoleController {
                     closestMuckDist = chebyshevDistance(myLoc, r.location);
                 }
             }
-            if (r.team.equals(rc.getTeam()) && r.type.equals(RobotType.POLITICIAN)) {
-                allies.add(r.location);
-            }
-            if(r.type.equals(RobotType.ENLIGHTENMENT_CENTER) && !r.team.equals(rc.getTeam())) {
-                if (chebyshevDistance(myLoc, r.location) < closestECDist) {
-                    notOurEC = r;
-                    closestECDist = chebyshevDistance(myLoc, r.location);
-                }
-            }
         }
 
-        if (notOurEC != null) {
-            int influenceComponent = (notOurEC.conviction << 15) & (0x1000000 - 1);
-            int enemyComponent = notOurEC.team.equals(rc.getTeam().opponent()) ? 1 << 14 : 0;
-            rc.setFlag(influenceComponent + enemyComponent + locToFlag(spawnEC, notOurEC.location));
-            if (rc.getConviction() >= 0.5 * notOurEC.conviction) {
-                if(rc.canEmpower(myLoc.distanceSquaredTo(notOurEC.location)) 
-                        && myLoc.isAdjacentTo(notOurEC.location)) {
-                    rc.empower(myLoc.distanceSquaredTo(notOurEC.location));
-                } else {
-                    tryMove(getRoughMoveTowards(notOurEC.location, 2));
-                }
-            }
-        }
-
-        int buffer = 3;
         if (closestEnemyMuck != null) {
             int d2toMuck = myLoc.distanceSquaredTo(closestEnemyMuck.location);
             if (rc.canEmpower(9) && mucksInRange > 1) {// previously d2muck (adjacent to)
                 rc.empower(9);
-            } else if (spawnEC.distanceSquaredTo(closestEnemyMuck.location) <= 
-                    getTargetRadius() + 2 * Math.sqrt(getTargetRadius()) * buffer + buffer * buffer) { //foiling
-                if (rc.canEmpower(d2toMuck) && d2toMuck <= 2) {
-                    rc.empower(d2toMuck);
-                }
-                tryMove(getRoughMoveTowards(closestEnemyMuck.location, 2));
+            } else if (rc.canEmpower(2) && d2toMuck <= 2) {
+                rc.empower(2);
             }
+            tryMove(getRoughMoveTowards(closestEnemyMuck.location, 2));
         }
 
         Direction bestMove = null;
         if (spawnEC != null) {
-            //if (rc.getRoundNum() < 300) {
-                bestMove = getBestCloud(getPossibleMoves(false, spawnEC), spawnEC, getTargetRadius(), allies);
-            // } else {
-            //     bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, getTargetRadius(), standingWeight);
-            // }
+            if (rc.getRoundNum() < 300) {
+                bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, getTargetRadius(), 0);
+            } else {
+                bestMove = getBestVortex(getPossibleMoves(false, spawnEC), spawnEC, getTargetRadius(), standingWeight);
+            }
         }
 
         if (bestMove != null) {
