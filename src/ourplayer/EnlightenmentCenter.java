@@ -2,7 +2,7 @@ package ourplayer;
 
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 
 import battlecode.common.*;
@@ -19,8 +19,9 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     double politiciansPerSlanderer = 8;
     int slanderersBuilt = 0;
     int politiciansBuilt = 0;
-    HashSet<Integer> politicians = new HashSet<Integer>();
-    HashSet<Integer> slanderers = new HashSet<Integer>();
+
+    LinkedList<Integer> politicianIDs = new LinkedList<>();
+    LinkedList<Integer> muckrakerIDs = new LinkedList<>();
 
     public EnlightenmentCenter() {
         activeSlanderers = new LinkedList<Integer>();
@@ -30,43 +31,35 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
 
     public void run() throws GameActionException {
         age = rc.getRoundNum() - spawnTurn;
-
         int influence = rc.getInfluence();
-
         Direction dir = randomDirection();
-
         MapLocation myLoc = rc.getLocation();
 
-        /*** This works but default HashSet is too slow, this is a certified Paul moment ***/
-        // ArrayList<Integer> deadPoliticians = new ArrayList<Integer>();
-        // for (Integer id : politicians) {
-        //     if (rc.canGetFlag(id)) {
-        //         int flag = rc.getFlag(id);
-        //         if (flag != 0) {
-        //             int influenceComponent = flag >>> 15;
-        //             int enemyComponent = (flag >>> 14) % 2;
-        //             MapLocation ecLoc = flagToLoc(flag % 0x4000, myLoc);
-        //             // System.out.println((enemyComponent == 1 ? "Enemy" : "Neutral") + " EC at " 
-        //             //     + ecLoc.x + ", " + ecLoc.y + " has " + influenceComponent + " influence.");
-        //         }
-        //     } else {
-        //         deadPoliticians.add(id);
-        //     }
-        // }
-        // for (Integer id : deadPoliticians) {
-        //     politicians.remove(id);
-        // }
+        // scan all politician flags
+        Iterator<Integer> politicianItr = politicianIDs.iterator();
+        while (politicianItr.hasNext()) {
+            int id = politicianItr.next();
+            if (rc.canGetFlag(id)) {
+                // do something cool
+            } else {
+                // RIP
+                politicianItr.remove();
+            }
+        }
 
-        // ArrayList<Integer> deadSlanderers = new ArrayList<Integer>();
-        // for (Integer id : slanderers) {
-        //     if (!rc.canGetFlag(id)) {
-        //         // deadSlanderers.add(id);
-        //     }
-        // }
-        // for (Integer id : deadSlanderers) {
-        //     slanderers.remove(id);
-        // }
+        // scan all muckraker flags
+        Iterator<Integer> muckrakerItr = muckrakerIDs.iterator();
+        while (muckrakerItr.hasNext()) {
+            int id = muckrakerItr.next();
+            if (rc.canGetFlag(id)) {
+                // do something cool
+            } else {
+                // RIP
+                muckrakerItr.remove();
+            }
+        }
 
+        // scan for nearby enemies
         boolean nearbyEnemies = false;
         for (RobotInfo r : rc.senseNearbyRobots()) {
             if (r.team.equals(rc.getTeam().opponent())) {
@@ -74,53 +67,57 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                 break;
             }
         }
-
+        // calculate best value slanderer
         int index = idealSlandererInfluence.length - 1;
         while (idealSlandererInfluence[index] > influence) {
             --index;
         }
         int bestSlanderer = idealSlandererInfluence[index];
 
-        // if (spawnTurn == 1) {
-            for (int i = 0; i < 8; i++) {
-                //if (rc.getRoundNum() < 300 && slanderers.size() * politiciansPerSlanderer > politicians.size()) {
-                if (rc.getRoundNum() < 300 && slanderersBuilt * politiciansPerSlanderer > politiciansBuilt) {    
-                    if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100)) {
-                        politiciansBuilt++;
-                        break;
-                    }
-                } else if (rc.getRoundNum() < 600
-                        && slanderersBuilt * (politiciansPerSlanderer / 2) > politiciansBuilt) {
-                    if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100)) {
-                        politiciansBuilt++;
-                        break;
-                    }
-                } else if (rc.getRoundNum() < 900
-                        && slanderersBuilt * (politiciansPerSlanderer / 4) > politiciansBuilt) {
-                    if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100)) {
-                        politiciansBuilt++;
-                        break;
-                    }
-                } else if (nearbyEnemies == false || spawnTurn == 1) {
-                    if (tryBuildRobot(RobotType.SLANDERER, dir, bestSlanderer)) {
-                        slanderersBuilt++;
-                        // activeSlanderers.add(bestSlanderer / 20);
-                        // if(activeSlanderers.size() > 50) {
-                        // activeSlanderers.poll();
-                        // }
-                        break;
-                    }
+        // spawn loop
+        for (int i = 0; i < 8; i++) {
+            // if (rc.getRoundNum() < 300 && slanderers.size() * politiciansPerSlanderer >
+            // politicians.size()) {
+            if (rc.getRoundNum() < 300 && slanderersBuilt * politiciansPerSlanderer > politiciansBuilt) {
+                if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100)) {
+                    System.out.println("Successfully scanned new politician: "
+                            + politicianIDs.add(rc.senseRobotAtLocation(myLoc.add(dir)).ID));
+                    politiciansBuilt++;
+                    break;
                 }
-                tryBuildRobot(RobotType.MUCKRAKER, dir, 1);
-                dir = dir.rotateRight();
+            } else if (rc.getRoundNum() < 600 && slanderersBuilt * (politiciansPerSlanderer / 2) > politiciansBuilt) {
+                if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100)) {
+                    politiciansBuilt++;
+                    break;
+                }
+            } else if (rc.getRoundNum() < 900 && slanderersBuilt * (politiciansPerSlanderer / 4) > politiciansBuilt) {
+                if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100)) {
+                    politiciansBuilt++;
+                    break;
+                }
+            } else if (nearbyEnemies == false || spawnTurn == 1) {
+                if (tryBuildRobot(RobotType.SLANDERER, dir, bestSlanderer)) {
+                    slanderersBuilt++;
+                    // activeSlanderers.add(bestSlanderer / 20);
+                    // if(activeSlanderers.size() > 50) {
+                    // activeSlanderers.poll();
+                    // }
+                    break;
+                }
             }
+            if (tryBuildRobot(RobotType.MUCKRAKER, dir, 1)) {
+                System.out.println("Successfully scanned new muckraker: "
+                        + muckrakerIDs.add(rc.senseRobotAtLocation(myLoc.add(dir)).ID));
+            }
+            dir = dir.rotateRight();
+        }
         // } else {
-        //     for (int i = 0; i < 8; i++) {
-        //         if (tryBuildRobot(RobotType.MUCKRAKER, dir, rc.getInfluence())) {
-        //             break;
-        //         }
-        //         dir = dir.rotateRight();
-        //     }
+        // for (int i = 0; i < 8; i++) {
+        // if (tryBuildRobot(RobotType.MUCKRAKER, dir, rc.getInfluence())) {
+        // break;
+        // }
+        // dir = dir.rotateRight();
+        // }
         // }
 
         // if (rc.getRoundNum() == 1){
@@ -129,9 +126,11 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         // if (influence + influencePerTurn > Integer.MAX_VALUE - 500000000){
         // rc.bid(influencePerTurn);
         // }
+
+        //
         if (rc.getRoundNum() > startBiddingRound) {
             if (rc.getInfluence() > minBiddingInfluence) {
-                 bidder.bid();
+                bidder.bid();
             } else {
                 if (rc.canBid(1)) {
                     rc.bid(1);
@@ -141,15 +140,15 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
 
         /*** Adds to the too slow HashSets ***/
         // for (Direction d : directions) {
-        //     if (rc.onTheMap(rc.adjacentLocation(d))) {
-        //         RobotInfo r = rc.senseRobotAtLocation(rc.adjacentLocation(d));
-        //         if (r != null && r.team.equals(rc.getTeam())) {
-        //             if (r.type.equals(RobotType.POLITICIAN)) {
-        //                 politicians.add(r.ID);
-        //             } else if (r.type.equals(RobotType.SLANDERER)) {
-        //                 slanderers.add(r.ID);
-        //             }
-        //         }
+        // if (rc.onTheMap(rc.adjacentLocation(d))) {
+        // RobotInfo r = rc.senseRobotAtLocation(rc.adjacentLocation(d));
+        // if (r != null && r.team.equals(rc.getTeam())) {
+        // if (r.type.equals(RobotType.POLITICIAN)) {
+        // politicians.add(r.ID);
+        // } else if (r.type.equals(RobotType.SLANDERER)) {
+        // slanderers.add(r.ID);
+        // }
+        // }
         // }
 
         if (rc.getRoundNum() % 50 == 0) {
