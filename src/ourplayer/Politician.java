@@ -47,11 +47,11 @@ public class Politician extends RobotPlayer implements RoleController {
                     spawnECid = nearby[i].ID;
                 }
             }
-            if (spawnEC == null) { 
+
+            if (spawnEC == null) {
                 converted = true;
                 return;
-            }
-            else {
+            } else {
                 ecPassability = rc.sensePassability(spawnEC);
                 if (rc.canGetFlag(spawnECid)) {
                     int flag = rc.getFlag(spawnECid);
@@ -60,7 +60,6 @@ public class Politician extends RobotPlayer implements RoleController {
                     }
                 }
             }
-
         }
         maxRadius = minRadius + ecPassability * passabilityMultiplier;
     }
@@ -102,11 +101,13 @@ public class Politician extends RobotPlayer implements RoleController {
     }
 
     public void run() throws GameActionException {
-        if (rc.getRoundNum() >= 1495 && rc.getRobotCount() > 100) { // cause it would suck to take the map at the end and not kill 2 1hp politicians and lose on votes
-            rc.empower(9);
+        if (rc.getRoundNum() >= 1495 && rc.getRobotCount() > 100) { // cause it would suck to take the map at the end
+            if (rc.canEmpower(9)) { // and not kill 2 1hp politicians and lose on votes
+                rc.empower(9);
+            }
         }
         if (converted) {
-            convertedRun(); 
+            convertedRun();
             return;
         }
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
@@ -127,6 +128,7 @@ public class Politician extends RobotPlayer implements RoleController {
         int closestECDist = 1000;
         ArrayList<MapLocation> allies = new ArrayList<MapLocation>();
         for (RobotInfo r : nearbyRobots) {
+            // detect muckrakers in range as well as the closest one
             if (r.type.equals(RobotType.MUCKRAKER) && !r.team.equals(rc.getTeam())) {
                 if (myLoc.distanceSquaredTo(r.location) <= 9) {
                     mucksInRange++;
@@ -136,16 +138,19 @@ public class Politician extends RobotPlayer implements RoleController {
                     closestMuckDist = chebyshevDistance(myLoc, r.location);
                 }
             }
+            // save allies for this turn only
             if (r.team.equals(rc.getTeam()) && r.type.equals(RobotType.POLITICIAN)) {
                 allies.add(r.location);
             }
+
+            // if you see a new enlightenment center, flag it
             if (r.type.equals(RobotType.ENLIGHTENMENT_CENTER)) {
                 if (!ecsToSend.contains(r) && r.location != spawnEC) {
                     boolean newInfo = true;
                     for (int i = 0; i < previouslySentECs.size(); ++i) {
                         RobotInfo ec = previouslySentECs.get(i);
                         if (ec.location.equals(r.location)) {
-                            if (!ec.equals(r)){
+                            if (!ec.equals(r)) {
                                 previouslySentECs.remove(i);
                             } else {
                                 newInfo = false;
@@ -153,10 +158,10 @@ public class Politician extends RobotPlayer implements RoleController {
                             break;
                         }
                     }
-                    if(newInfo) {
+                    if (newInfo) {
                         previouslySentECs.add(r);
                         ecsToSend.add(r);
-                    }            
+                    }
                 }
                 if (!r.team.equals(rc.getTeam()) && chebyshevDistance(myLoc, r.location) < closestECDist) {
                     notOurEC = r;
@@ -179,7 +184,7 @@ public class Politician extends RobotPlayer implements RoleController {
 
         if (notOurEC != null && (targetEC == null || !notOurEC.location.equals(targetEC.location))) {
             if (rc.getConviction() >= 0.5 * notOurEC.conviction) {
-                if(rc.canEmpower(myLoc.distanceSquaredTo(notOurEC.location)) 
+                if (rc.canEmpower(myLoc.distanceSquaredTo(notOurEC.location))
                         && myLoc.isAdjacentTo(notOurEC.location)) {
                     rc.empower(myLoc.distanceSquaredTo(notOurEC.location));
                 } else {
@@ -202,7 +207,7 @@ public class Politician extends RobotPlayer implements RoleController {
         if (targetEC != null) {
             int d2toTarget = myLoc.distanceSquaredTo(targetEC.location);
             if (rc.canEmpower(d2toTarget)) { // if we can take it then take it
-                if(((int) (rc.getConviction() * rc.getEmpowerFactor(rc.getTeam(), 0) - 10)) 
+                if (((int) (rc.getConviction() * rc.getEmpowerFactor(rc.getTeam(), 0) - 10))
                         / rc.senseNearbyRobots(d2toTarget).length > targetEC.influence) {
                     rc.empower(d2toTarget);
                 } else if (targetEC.team.equals(Team.NEUTRAL) && turnsWaited >= neutralTurnsToWait) {
@@ -224,8 +229,8 @@ public class Politician extends RobotPlayer implements RoleController {
             int d2toMuck = myLoc.distanceSquaredTo(closestEnemyMuck.location);
             if (rc.canEmpower(9) && mucksInRange > 1) {// previously d2muck (adjacent to)
                 rc.empower(9);
-            } else if (spawnEC.distanceSquaredTo(closestEnemyMuck.location) <= 
-                    getTargetRadius() + 2 * Math.sqrt(getTargetRadius()) * buffer + buffer * buffer) { //foiling
+            } else if (spawnEC.distanceSquaredTo(closestEnemyMuck.location) <= getTargetRadius()
+                    + 2 * Math.sqrt(getTargetRadius()) * buffer + buffer * buffer) { // foiling
                 if (rc.canEmpower(d2toMuck) && d2toMuck <= 2) {
                     rc.empower(d2toMuck);
                 }
@@ -276,7 +281,7 @@ public class Politician extends RobotPlayer implements RoleController {
 
         if (notOurEC != null) {
             if (rc.getConviction() >= 0.5 * notOurEC.conviction) {
-                if(rc.canEmpower(myLoc.distanceSquaredTo(notOurEC.location)) 
+                if (rc.canEmpower(myLoc.distanceSquaredTo(notOurEC.location))
                         && myLoc.isAdjacentTo(notOurEC.location)) {
                     rc.empower(myLoc.distanceSquaredTo(notOurEC.location));
                 } else {

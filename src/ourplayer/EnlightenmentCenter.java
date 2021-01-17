@@ -15,9 +15,9 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     int minBiddingInfluence = 500;
     int influenceToSave = 800;
     int minHunterInfluence = 100;
-    double percentPoliticians = 0.5;  // should to add to 1
-    double percentSlanderers = 0.25;  // with
-    double percentMuckrakers = 0.25;  // these
+    double percentPoliticians = 0.5; // should to add to 1
+    double percentSlanderers = 0.25; // with
+    double percentMuckrakers = 0.25; // these
 
     Node politicianIDs = new Node(-1);
     int politicians = 0;
@@ -32,9 +32,8 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     int turnsToDefend = 50;
     int turnsSinceMuckNear = turnsToDefend;
 
-    ArrayList<RobotInfo> ecList = new ArrayList<RobotInfo>(); 
+    ArrayList<RobotInfo> ecList = new ArrayList<RobotInfo>();
     ArrayList<RobotInfo> recentlyTargeted = new ArrayList<RobotInfo>();
-
 
     public EnlightenmentCenter() {
         bidder = new Bidder();
@@ -45,7 +44,6 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         int roundNum = rc.getRoundNum();
         age = roundNum - spawnTurn;
         int influence = rc.getInfluence();
-        Direction dir = randomDirection();
         Team team = rc.getTeam();
         MapLocation myLoc = rc.getLocation();
         if (!recentlyFlagged) {
@@ -116,14 +114,14 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
             pointer = pointer.next;
             int id = pointer.value;
             if (rc.canGetFlag(id)) {
-                if(rc.getFlag(id) != 420 && id != mostRecentID) {
+                if (rc.getFlag(id) != 420 && id != mostRecentID) {
                     politicianIDs.add(pointer.value);
                     ++politicians;
                 } else {
                     continue;
                 }
 
-            } 
+            }
             // RIP
             pointer = pointer.remove();
             --slanderers;
@@ -140,7 +138,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
             } else {
                 enemyECs.add(ec);
             }
-        }    
+        }
 
         int totalUnits = politicians + muckrakers + slanderers;
 
@@ -154,8 +152,9 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                 }
             }
         }
-        // if (biggestNearbyEnemy > 0 && roundNum == spawnTurn) { // dont start spawning slanderers if its contested
-        //     turnsSinceMuckNear = 0;                            // actually it might be ok lets try it
+        // if (biggestNearbyEnemy > 0 && roundNum == spawnTurn) { // dont start spawning
+        // slanderers if its contested
+        // turnsSinceMuckNear = 0; // actually it might be ok lets try it
         // }
         influence -= biggestNearbyEnemy; // don't use all our influence if we're gonna die
 
@@ -176,13 +175,14 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         // get the closest enemy ec we know about
         RobotInfo closestEnemyEC = null;
         for (RobotInfo r : enemyECs) {
-            if (closestEnemyEC == null || chebyshevDistance(myLoc, r.location) 
-                    < chebyshevDistance(myLoc, closestEnemyEC.location)) {
+            if (closestEnemyEC == null
+                    || chebyshevDistance(myLoc, r.location) < chebyshevDistance(myLoc, closestEnemyEC.location)) {
                 closestEnemyEC = r;
             }
         }
 
         // spawn loop
+        Direction dir = randomDirection();
         for (int i = 0; i < 8; i++) {
             if (lowestNeutralEC != null && lowestNeutralEC.influence + 11 <= influence) {
                 if (tryBuildRobot(RobotType.POLITICIAN, dir, lowestNeutralEC.influence + 11, politicianIDs)) {
@@ -192,7 +192,8 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                     ++politicians;
                     break;
                 }
-            } else if (slanderers <= percentSlanderers * totalUnits && (turnsSinceMuckNear > turnsToDefend || spawnTurn == 1)) {
+            } else if (slanderers <= percentSlanderers * totalUnits
+                    && (turnsSinceMuckNear > turnsToDefend || spawnTurn == 1)) {
                 if (tryBuildRobot(RobotType.SLANDERER, dir, bestSlanderer, slandererIDs)) {
                     ++slanderers;
                     break;
@@ -212,7 +213,8 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                     break;
                 }
             }
-            if (tryBuildRobot(RobotType.MUCKRAKER, dir, 1, muckrakerIDs)) { // someday flag mucks to tank if influence is negative
+            if (tryBuildRobot(RobotType.MUCKRAKER, dir, 1, muckrakerIDs)) { // someday flag mucks to tank if influence
+                                                                            // is negative
                 ++muckrakers;
             }
             dir = dir.rotateRight();
@@ -241,9 +243,9 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
             return false;
         }
     }
-    
+
     boolean tryBuildRobot(RobotType type, Direction dir, int influence, Node list) throws GameActionException {
-        if(tryBuildRobot(type, dir, influence)){
+        if (tryBuildRobot(type, dir, influence)) {
             mostRecentID = rc.senseRobotAtLocation(rc.getLocation().add(dir)).ID;
             list.add(mostRecentID);
             return true;
