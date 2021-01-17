@@ -1,6 +1,8 @@
 package ourplayer;
 
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.LinkedList;
 
 import battlecode.common.*;
 
@@ -8,9 +10,29 @@ public class Muckracker extends RobotPlayer implements RoleController {
     boolean foundPath = false;
     MapLocation loc;
     MapLocation newLoc;
+    private MapLocation spawnEC;
+    private int spawnECid;
+    ArrayList<RobotInfo> previouslySentECs = new ArrayList<RobotInfo>();
+    Deque<RobotInfo> ecsToSend = new LinkedList<RobotInfo>();
+
+    public Muckracker() throws GameActionException {
+        if (spawnEC == null) {
+            RobotInfo[] nearby = rc.senseNearbyRobots();
+            for (int i = 0; i < nearby.length; i++) {
+
+                // This WILL break if there is more than one EC next to
+                if (nearby[i].type == RobotType.ENLIGHTENMENT_CENTER && (spawnEC == null || nearby[i].location
+                        .distanceSquaredTo(rc.getLocation()) < spawnEC.distanceSquaredTo(rc.getLocation()))) {
+                    spawnEC = nearby[i].location;
+                    spawnECid = nearby[i].ID;
+                }
+            }
+        }
+    }
 
     public void run() throws GameActionException {
         MapLocation myLoc = rc.getLocation();
+        rc.setFlag(0);
 
         RobotInfo closestEnemySlanderer = null;
         int closestSlandererDist = 1000;
@@ -24,6 +46,31 @@ public class Muckracker extends RobotPlayer implements RoleController {
             if (r.team.equals(rc.getTeam()) && r.type.equals(RobotType.MUCKRAKER)) {
                 allies.add(r.location);
             }
+            if (r.type.equals(RobotType.ENLIGHTENMENT_CENTER)) {
+                if (!ecsToSend.contains(r) && r.location != spawnEC) {
+                    boolean newInfo = true;
+                    for (int i = 0; i < previouslySentECs.size(); ++i) {
+                        RobotInfo ec = previouslySentECs.get(i);
+                        if (ec.location.equals(r.location)) {
+                            if (!ec.equals(r)){
+                                previouslySentECs.remove(i);
+                            } else {
+                                newInfo = false;
+                            }
+                            break;
+                        }
+                    }
+                    if(newInfo) {
+                        previouslySentECs.add(r);
+                        ecsToSend.add(r);
+                    }            
+                }
+            }
+        }
+
+        if (!ecsToSend.isEmpty()) {
+            FlagInfo ecFlag = new FlagInfo(ecsToSend.poll(), rc.getTeam(), spawnEC);
+            rc.setFlag(ecFlag.generateFlag());
         }
 
         if (closestEnemySlanderer != null) {
@@ -34,28 +81,5 @@ public class Muckracker extends RobotPlayer implements RoleController {
         }
 
         tryMove(getBestSpacing(allies));
-        // if (!foundPath) {
-        // loc = rc.getLocation();
-        // if (rc.getTeam().equals(Team.A)) {
-        // newLoc = new MapLocation(loc.x + 11, loc.y + 25);
-        // } else {
-        // newLoc = new MapLocation(loc.x - 11, loc.y + 25);
-        // }
-        // // System.out.printf("bytecode used before initializing AStarSearch object:
-        // // %d\n", Clock.getBytecodeNum());
-        // // AStarSearch aStar = new AStarSearch(newLoc);
-        // // System.out.printf("bytecode used after initializing AStarSearch object:
-        // // %d\n", Clock.getBytecodeNum());
-        // // aStar.findPath();
-        // foundPath = true;
-        // } else {
-        // Direction d;
-        // if (rc.getTeam().equals(Team.A)) {
-        // d = getRoughMoveTowards(newLoc, 2);
-        // } else {
-        // d = getRoughMoveTowards(newLoc, 1);
-        // }
-        // tryMove(d);
-        // }
     }
 }

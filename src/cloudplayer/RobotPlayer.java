@@ -1,4 +1,4 @@
-package ourplayer;
+package cloudplayer;
 
 import battlecode.common.*;
 import java.util.ArrayList;
@@ -144,6 +144,15 @@ public strictfp class RobotPlayer {
             return false;
     }
 
+    static boolean tryBuildRobot(RobotType type, Direction dir, int influence) throws GameActionException {
+        if (rc.canBuildRobot(type, dir, influence)) {
+            rc.buildRobot(type, dir, influence);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     int getECIncome() {
         return ((int) Math.sqrt(rc.getRoundNum())) / 5;
     }
@@ -252,22 +261,22 @@ public strictfp class RobotPlayer {
 
     protected Direction getBestSpacing(ArrayList<MapLocation> allies) {
         MapLocation myLoc = rc.getLocation();
-
+        
         double totalDX = 0;
         double totalDY = 0;
         for (MapLocation loc : allies) {
             int dx = loc.x - myLoc.x;
             int dy = loc.y - myLoc.y;
 
-            double forceVecMagicNumber = Math.pow(dx * dx + dy * dy, 3.0 / 2);
-            totalDX += dx / forceVecMagicNumber;
-            totalDY += dy / forceVecMagicNumber;
+            double forceVecMagicNumber = Math.pow(dx*dx + dy*dy, 3.0/2);
+            totalDX +=dx/forceVecMagicNumber;
+            totalDY += dy/forceVecMagicNumber;
         }
 
         double bestDot = 0.0;
         Direction bestDir = randomDirection();
-        for (Direction d : getPossibleMoves()) {
-            // dot product for closest match??
+        for(Direction d : getPossibleMoves()) {
+            //dot product for closest match??
             double dot = -(d.dx * totalDX + d.dy * totalDY);
             if (dot > bestDot) {
                 bestDot = dot;
@@ -278,7 +287,7 @@ public strictfp class RobotPlayer {
     }
 
     protected Direction getBestCloud(ArrayList<Direction> possibleMoves, MapLocation spawnEC, double targetRadius,
-            ArrayList<MapLocation> allies) {
+        ArrayList<MapLocation> allies) {
         // ~~~~~~~~ MODIFY THESE TO CHANGE PRIORITIZATION ~~~~~~~~~//
         // double kRadius = 0.5f;
         // double kClockwise = 0.5f;
@@ -294,16 +303,16 @@ public strictfp class RobotPlayer {
         double targetVecLength = 1;
 
         MapLocation myLoc = rc.getLocation();
-
+        
         double totalDX = 0;
         double totalDY = 0;
         for (MapLocation loc : allies) {
             int dx = loc.x - myLoc.x;
             int dy = loc.y - myLoc.y;
 
-            double forceVecMagicNumber = Math.pow(dx * dx + dy * dy, 3.0 / 2);
-            totalDX += dx / forceVecMagicNumber;
-            totalDY += dy / forceVecMagicNumber;
+            double forceVecMagicNumber = Math.pow(dx*dx + dy*dy, 3.0/2);
+            totalDX +=dx/forceVecMagicNumber;
+            totalDY += dy/forceVecMagicNumber;
         }
         // a standing weight of 1 treats standing still as a perfectly perpendicular
         // move, 0 is a perfectly parallel
@@ -328,7 +337,7 @@ public strictfp class RobotPlayer {
             // adjust a to produce steeper or smoother down
             double r2Weight = 1 / (1 + deltaR2); // (0, 1]
 
-            double totalWeight = r2Weight + -0.5 * (d.dx * totalDX + d.dy * totalDY);
+            double totalWeight = r2Weight + -0.5*(d.dx * totalDX + d.dy * totalDY);
 
             if (totalWeight > bestWeight) {
                 bestWeight = totalWeight;
@@ -350,6 +359,7 @@ public strictfp class RobotPlayer {
         // "perpendicularity" of vector to ec and vector to move
         // cross product
     }
+
 
     // Get best possible move to form a vortex
     // currently implements a switch back and forth in
@@ -414,12 +424,12 @@ public strictfp class RobotPlayer {
         // cross product
     }
 
-    protected static MapLocation flagToLoc(int flag, MapLocation spawnEC) {
-        return new MapLocation(spawnEC.x + ((flag & 0x7f) - 63), spawnEC.y + (((flag >>> 7) & 0x7f) - 63));
+    protected static int locToFlag(MapLocation spawnEC, MapLocation target) {
+        return (((target.y - spawnEC.y + 63) & 0x7f) << 7) | ((target.x - spawnEC.x + 63) & 0x7f);
     }
 
-    protected static int locToFlag(MapLocation spawnEC, MapLocation target) {
-        return (((target.y - spawnEC.y + 63) & 0x7f) << 7) + ((target.x - spawnEC.x + 63) & 0x7f);
+    protected static MapLocation flagToLoc(int flag, MapLocation spawnEC) {
+        return new MapLocation(spawnEC.x + ((flag % 0x80) - 63), spawnEC.y + ((flag >>> 7) - 63));
     }
 
 }

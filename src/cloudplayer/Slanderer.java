@@ -1,4 +1,4 @@
-package ourplayer;
+package cloudplayer;
 
 import java.util.ArrayList;
 
@@ -50,13 +50,13 @@ public class Slanderer extends RobotPlayer implements RoleController {
         }
         ecPassability = rc.sensePassability(spawnEC);
         endRadius2 = minRadius + ecPassability * passabilityMultiplier;
-        rc.setFlag(420); //this is funny because its the weed number
     }
 
     public void run() throws GameActionException {
         MapLocation myLoc = rc.getLocation();
         RobotInfo closestEnemyMuck = null;
         int closestMuckDist = 1000;
+        rc.setFlag(420); //this is funny because its the weed number
         for (RobotInfo r : rc.senseNearbyRobots()) {
             if (r.type.equals(RobotType.MUCKRAKER) && !r.team.equals(rc.getTeam())
                     && chebyshevDistance(myLoc, r.location) < closestMuckDist) {

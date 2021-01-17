@@ -86,14 +86,15 @@ public class FlagInfo {
             // 110 Wall
             //
             //
-            // [type][LOCATIONx][LOCATIONy]
-            // (24)3 7 7
+            // [min(2^9, influence/4)][type][LOCATIONx][LOCATIONy]
+            // (24)7 3 7 7
         }
 
-        targetInfo = new RobotInfo(0, targTeam, targType, 0, 0, flagToLoc(flag, spawnEC));
+        int influence = (flag >>> 15) & 0x1fc;
+
+        targetInfo = new RobotInfo(0, targTeam, targType, influence, influence, flagToLoc(flag, spawnEC));
         this.spawnEC = spawnEC;
         this.allyTeam = allyTeam;
-
     }
 
     protected int generateFlag() {
@@ -126,6 +127,9 @@ public class FlagInfo {
                 | ((targetInfo.location.x - spawnEC.x + 63) & 0x7f);
         // type
         flag |= (typeBits & 0x7) << 14;
+
+        //influence
+        flag |= ((Math.min(targetInfo.influence + 3, 511)/4) & 0x7f) << 17;
         return flag;
     }
 
