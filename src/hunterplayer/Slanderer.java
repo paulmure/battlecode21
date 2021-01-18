@@ -1,4 +1,4 @@
-package ourplayer;
+package hunterplayer;
 
 import java.util.ArrayList;
 
@@ -28,7 +28,7 @@ public class Slanderer extends RobotPlayer implements RoleController {
 
     final int minRadius = 5;
     final int initialEndRadius2 = 6;
-    final double passabilityMultiplier = 45; // change this to change outer radius^2
+    final double passabilityMultiplier = 55; // change this to change outer radius^2
     private double endRadius2 = 35;
     private double beginRadius2 = 4;
 
@@ -50,7 +50,7 @@ public class Slanderer extends RobotPlayer implements RoleController {
         }
         ecPassability = rc.sensePassability(spawnEC);
         endRadius2 = minRadius + ecPassability * passabilityMultiplier;
-        rc.setFlag(420); //this is funny because its the weed number
+        rc.setFlag(420); // this is funny because its the weed number
     }
 
     public void run() throws GameActionException {
@@ -77,8 +77,8 @@ public class Slanderer extends RobotPlayer implements RoleController {
             }
             tryMove(runDirection);
         } else {
-            Direction bestMove = getBestVortex(restrictPossibleMoves(getPossibleMoves(true, spawnEC)), spawnEC,
-                    calculateTargetRadius2(), 0.4);
+            Direction bestMove = getBestVortex(restrictPossibleMoves(getPossibleMoves(false, spawnEC)), spawnEC,
+                    calculateTargetRadius2(), 0.0);
             if (bestMove != null) {
                 tryMove(bestMove);
             }

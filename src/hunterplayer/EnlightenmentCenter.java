@@ -1,4 +1,4 @@
-package ourplayer;
+package hunterplayer;
 
 import java.util.ArrayList;
 
@@ -15,9 +15,9 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     int minBiddingInfluence = 500;
     int influenceToSave = 800;
     int minHunterInfluence = 100;
-    double percentPoliticians = 0.25; // should to add to 1
+    double percentPoliticians = 0.5; // should to add to 1
     double percentSlanderers = 0.25; // with
-    double percentMuckrakers = 0.5; // these
+    double percentMuckrakers = 0.25; // these
 
     Node politicianIDs = new Node(-1);
     int politicians = 0;
@@ -29,8 +29,6 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     int mostRecentID = -1;
     boolean recentlyFlagged = false;
     boolean recentHunter = false;
-    int hunterCounter = 3;
-    int muckHunterRatio = 5;
     int turnsToDefend = 50;
     int turnsSinceMuckNear = turnsToDefend;
 
@@ -46,6 +44,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         int roundNum = rc.getRoundNum();
         age = roundNum - spawnTurn;
         int influence = rc.getInfluence();
+        Direction dir = randomDirection();
         Team team = rc.getTeam();
         MapLocation myLoc = rc.getLocation();
         if (!recentlyFlagged) {
@@ -53,10 +52,6 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         }
         recentlyFlagged = false;
         ++turnsSinceMuckNear;
-        if (muckrakers >= 10) {
-            percentMuckrakers = 0;
-            percentPoliticians = 0.75;
-        }
 
         // scan all politician flags
         Node pointer = politicianIDs;
@@ -187,74 +182,52 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
             }
         }
 
-        // spawn direction selection
-        Direction dir = randomDirection();
+        // spawn loop
         for (int i = 0; i < 8; i++) {
-            if (rc.isLocationOccupied(myLoc.add(dir))) {
-                dir = dir.rotateRight();
-            }
-        }
-
-        if (lowestNeutralEC != null && lowestNeutralEC.influence + 11 <= influence) {
-            if (tryBuildRobot(RobotType.POLITICIAN, dir, lowestNeutralEC.influence + 11, politicianIDs)) {
-                rc.setFlag(new FlagInfo(lowestNeutralEC, team, myLoc).generateFlag());
-                recentlyFlagged = true;
-                recentlyTargeted.add(lowestNeutralEC);
-                ++politicians;
-            }
-        } else if (slanderers <= percentSlanderers * totalUnits
-                && (turnsSinceMuckNear > turnsToDefend || spawnTurn == 1)) {
-            if (tryBuildRobot(RobotType.SLANDERER, dir, bestSlanderer, slandererIDs)) {
-                ++slanderers;
-            }
-        } else if (closestEnemyEC != null && !recentHunter && influence > influenceToSave + minHunterInfluence) {
-            if (hunterCounter < muckHunterRatio) {
+            if (lowestNeutralEC != null && lowestNeutralEC.influence + 11 <= influence) {
+                if (tryBuildRobot(RobotType.POLITICIAN, dir, lowestNeutralEC.influence + 11, politicianIDs)) {
+                    rc.setFlag(new FlagInfo(lowestNeutralEC, team, myLoc).generateFlag());
+                    recentlyFlagged = true;
+                    recentlyTargeted.add(lowestNeutralEC);
+                    ++politicians;
+                    break;
+                }
+            } else if (slanderers <= percentSlanderers * totalUnits
+                    && (turnsSinceMuckNear > turnsToDefend || spawnTurn == 1)) {
+                if (tryBuildRobot(RobotType.SLANDERER, dir, bestSlanderer, slandererIDs)) {
+                    ++slanderers;
+                    break;
+                }
+            } else if (closestEnemyEC != null && !recentHunter && influence > influenceToSave + minHunterInfluence) {
                 if (tryBuildRobot(RobotType.POLITICIAN, dir, influence - influenceToSave, politicianIDs)) {
                     rc.setFlag(new FlagInfo(closestEnemyEC, team, myLoc).generateFlag());
                     recentlyFlagged = true;
                     recentHunter = true;
                     ++politicians;
-                    ++hunterCounter;
+                    break;
                 }
-            } else {
-                if (tryBuildRobot(RobotType.MUCKRAKER, dir, influence - influenceToSave, muckrakerIDs)) {
-                    RobotInfo randomEnemyEC = enemyECs.get((int) (Math.random() * enemyECs.size()));
-                    rc.setFlag(new FlagInfo(randomEnemyEC, team, myLoc).generateFlag());
-                    recentlyFlagged = true;
-                    recentHunter = true;
+            } else if (politicians <= percentPoliticians * totalUnits) {
+                if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100, politicianIDs)) {
+                    recentHunter = false;
                     ++politicians;
-                    hunterCounter = 0;
+                    break;
                 }
             }
-        } else if (politicians <= percentPoliticians * totalUnits) {
-            if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100, politicianIDs)) {
-                recentHunter = false;
-                ++politicians;
+            if (tryBuildRobot(RobotType.MUCKRAKER, dir, 1, muckrakerIDs)) { // someday flag mucks to tank if influence
+                                                                            // is negative
+                ++muckrakers;
             }
-        }
-        if (tryBuildRobot(RobotType.MUCKRAKER, dir, 1, muckrakerIDs)) { // someday flag mucks to tank if influence
-                                                                        // is negative
-            ++muckrakers;
+            dir = dir.rotateRight();
         }
 
-        // BIDDING
-        //
-        if (rc.getRoundNum() > startBiddingRound && rc.getInfluence() > minBiddingInfluence) {
-
-            int desiredBid = bidder.bid();
-            if (rc.canBid(desiredBid)) {
-                rc.bid(desiredBid);
+        if (rc.getRoundNum() > startBiddingRound) {
+            if (rc.getInfluence() > minBiddingInfluence) {
+                bidder.bid();
+            } else {
+                if (rc.canBid(1)) {
+                    rc.bid(1);
+                }
             }
-
-            System.out.println("bid " + desiredBid);
-            bidder.setLastBid(desiredBid);
-        } else {
-
-            if (rc.canBid(1)) {
-                System.out.println("bid 1 (from else block)");
-                rc.bid(1);
-            }
-
         }
 
         if (rc.getRoundNum() % 50 == 0) {

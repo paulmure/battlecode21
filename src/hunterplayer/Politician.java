@@ -1,4 +1,4 @@
-package ourplayer;
+package hunterplayer;
 
 import java.util.ArrayList;
 import java.util.Deque;
@@ -17,7 +17,6 @@ public class Politician extends RobotPlayer implements RoleController {
     final int neutralTurnsToWait = 5;
     final int enemyTurnsToWait = 15;
     boolean converted = false;
-    boolean isHunter = false;
     int turnsWaited = 0;
     private double maxRadius;
     private MapLocation spawnEC;
@@ -32,10 +31,15 @@ public class Politician extends RobotPlayer implements RoleController {
 
     public Politician() throws GameActionException {
         spawnRound = rc.getRoundNum();
+        maxRadius = 60;
+
         // set spawnEC
+
         if (spawnEC == null) {
+
             RobotInfo[] nearby = rc.senseNearbyRobots();
             for (int i = 0; i < nearby.length; i++) {
+
                 // This WILL break if there is more than one EC next to
                 if (nearby[i].type == RobotType.ENLIGHTENMENT_CENTER && (spawnEC == null || nearby[i].location
                         .distanceSquaredTo(rc.getLocation()) < spawnEC.distanceSquaredTo(rc.getLocation()))) {
@@ -51,23 +55,29 @@ public class Politician extends RobotPlayer implements RoleController {
                 if (rc.canGetFlag(spawnECid)) {
                     int flag = rc.getFlag(spawnECid);
                     if (flag != 0) {
-                        isHunter = true;
                         targetEC = new FlagInfo(flag, rc.getTeam(), spawnEC).targetInfo;
                     }
                 }
             }
+
         }
         maxRadius = minRadius + ecPassability * passabilityMultiplier;
     }
 
     public Politician(MapLocation ec, int ecID, double ecP) throws GameActionException {
+        // shut the fuck
         spawnEC = ec;
+
         spawnECid = ecID;
         ecPassability = ecP;
         // System.out.println("joe mama: " + ec);
+
         spawnRound = rc.getRoundNum();
+        maxRadius = 60;
+
+        // set spawnEC
+
         maxRadius = minRadius + ecPassability * passabilityMultiplier;
-        isHunter = Math.random() < 0.5 ? true : false;
     }
 
     private double getTargetRadius() {
@@ -91,10 +101,9 @@ public class Politician extends RobotPlayer implements RoleController {
     }
 
     public void run() throws GameActionException {
-        if (rc.getRoundNum() >= 1495 && rc.getTeamVotes() < 750 && rc.getRobotCount() > 100) { // cause it would suck to take the map at the end
-            if (rc.canEmpower(9)) { // and not kill 2 1hp politicians and lose on votes
-                rc.empower(9);
-            }
+        if (rc.getRoundNum() >= 1495 && rc.getRobotCount() > 100) { // cause it would suck to take the map at the end
+                                                                    // and not kill 2 1hp politicians and lose on votes
+            rc.empower(9);
         }
         if (converted) {
             convertedRun();
@@ -117,9 +126,7 @@ public class Politician extends RobotPlayer implements RoleController {
         RobotInfo notOurEC = null;
         int closestECDist = 1000;
         ArrayList<MapLocation> allies = new ArrayList<MapLocation>();
-        ArrayList<MapLocation> nearbyAllies = new ArrayList<MapLocation>();
         for (RobotInfo r : nearbyRobots) {
-            // detect muckrakers in range as well as the closest one
             if (r.type.equals(RobotType.MUCKRAKER) && !r.team.equals(rc.getTeam())) {
                 if (myLoc.distanceSquaredTo(r.location) <= 9) {
                     mucksInRange++;
@@ -129,15 +136,9 @@ public class Politician extends RobotPlayer implements RoleController {
                     closestMuckDist = chebyshevDistance(myLoc, r.location);
                 }
             }
-            // save allies for this turn only
             if (r.team.equals(rc.getTeam()) && r.type.equals(RobotType.POLITICIAN)) {
                 allies.add(r.location);
-                if (r.location.distanceSquaredTo(myLoc) <= 8) {
-                    nearbyAllies.add(r.location);
-                }
             }
-
-            // if you see a new enlightenment center, flag it
             if (r.type.equals(RobotType.ENLIGHTENMENT_CENTER)) {
                 if (!ecsToSend.contains(r) && r.location != spawnEC) {
                     boolean newInfo = true;
@@ -188,7 +189,7 @@ public class Politician extends RobotPlayer implements RoleController {
         }
 
         // if you're too big to be on muckraker duty go attack enemy ECs
-        if (/* isHunter && */rc.getConviction() >= hunterInfluence && targetEC == null && rc.canGetFlag(spawnECid)) {
+        if (rc.getConviction() >= hunterInfluence && targetEC == null && rc.canGetFlag(spawnECid)) {
             int flag = rc.getFlag(spawnECid);
             if (flag != 0) {
                 RobotInfo ec = new FlagInfo(flag, rc.getTeam(), spawnEC).targetInfo;
@@ -200,25 +201,22 @@ public class Politician extends RobotPlayer implements RoleController {
 
         if (targetEC != null) {
             int d2toTarget = myLoc.distanceSquaredTo(targetEC.location);
-            if (rc.canEmpower(d2toTarget)) {
-                if (rc.senseNearbyRobots(d2toTarget).length == 1 || d2toTarget == 1) {
+            if (rc.canEmpower(d2toTarget)) { // if we can take it then take it
+                if (((int) (rc.getConviction() * rc.getEmpowerFactor(rc.getTeam(), 0) - 10))
+                        / rc.senseNearbyRobots(d2toTarget).length > targetEC.influence) {
                     rc.empower(d2toTarget);
                 } else if (targetEC.team.equals(Team.NEUTRAL) && turnsWaited >= neutralTurnsToWait) {
                     rc.empower(d2toTarget);
                 } else if (targetEC.team.equals(rc.getTeam().opponent()) && turnsWaited >= enemyTurnsToWait) {
                     rc.empower(d2toTarget);
                 } else {
+                    tryMove(getRoughMoveTowards(targetEC.location, 2));
                     ++turnsWaited;
                 }
             } else {
+                tryMove(getRoughMoveTowards(targetEC.location, 2));
                 turnsWaited = 0;
             }
-            if (targetEC.team.equals(Team.NEUTRAL)){
-                tryMove(getRoughMoveTowards(targetEC.location, 2));
-            } else {
-                tryMove(getRoughMoveAvoid(targetEC.location, 2, nearbyAllies));
-            }
-            return;
         }
 
         int buffer = 3;
