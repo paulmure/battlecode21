@@ -28,7 +28,7 @@ public class Slanderer extends RobotPlayer implements RoleController {
 
     final int minRadius = 5;
     final int initialEndRadius2 = 6;
-    final double passabilityMultiplier = 55; // change this to change outer radius^2
+    final double passabilityMultiplier = 45; // change this to change outer radius^2
     private double endRadius2 = 35;
     private double beginRadius2 = 4;
 
@@ -77,8 +77,8 @@ public class Slanderer extends RobotPlayer implements RoleController {
             }
             tryMove(runDirection);
         } else {
-            Direction bestMove = getBestVortex(restrictPossibleMoves(getPossibleMoves(false, spawnEC)), spawnEC,
-                    calculateTargetRadius2(), 0.0);
+            Direction bestMove = getBestVortex(restrictPossibleMoves(getPossibleMoves(true, spawnEC)), spawnEC,
+                    calculateTargetRadius2(), 0.4);
             if (bestMove != null) {
                 tryMove(bestMove);
             }

@@ -91,7 +91,7 @@ public class Politician extends RobotPlayer implements RoleController {
     }
 
     public void run() throws GameActionException {
-        if (rc.getRoundNum() >= 1495 && rc.getRobotCount() > 100) { // cause it would suck to take the map at the end
+        if (rc.getRoundNum() >= 1495 && rc.getTeamVotes() < 750 && rc.getRobotCount() > 100) { // cause it would suck to take the map at the end
             if (rc.canEmpower(9)) { // and not kill 2 1hp politicians and lose on votes
                 rc.empower(9);
             }
@@ -117,6 +117,7 @@ public class Politician extends RobotPlayer implements RoleController {
         RobotInfo notOurEC = null;
         int closestECDist = 1000;
         ArrayList<MapLocation> allies = new ArrayList<MapLocation>();
+        ArrayList<MapLocation> nearbyAllies = new ArrayList<MapLocation>();
         for (RobotInfo r : nearbyRobots) {
             // detect muckrakers in range as well as the closest one
             if (r.type.equals(RobotType.MUCKRAKER) && !r.team.equals(rc.getTeam())) {
@@ -131,6 +132,9 @@ public class Politician extends RobotPlayer implements RoleController {
             // save allies for this turn only
             if (r.team.equals(rc.getTeam()) && r.type.equals(RobotType.POLITICIAN)) {
                 allies.add(r.location);
+                if (r.location.distanceSquaredTo(myLoc) <= 8) {
+                    nearbyAllies.add(r.location);
+                }
             }
 
             // if you see a new enlightenment center, flag it
@@ -196,22 +200,25 @@ public class Politician extends RobotPlayer implements RoleController {
 
         if (targetEC != null) {
             int d2toTarget = myLoc.distanceSquaredTo(targetEC.location);
-            if (rc.canEmpower(d2toTarget)) { // if we can take it then take it
-                if (((int) (rc.getConviction() * rc.getEmpowerFactor(rc.getTeam(), 0) - 10))
-                        / rc.senseNearbyRobots(d2toTarget).length > targetEC.influence) {
+            if (rc.canEmpower(d2toTarget)) {
+                if (rc.senseNearbyRobots(d2toTarget).length == 1 || d2toTarget == 1) {
                     rc.empower(d2toTarget);
                 } else if (targetEC.team.equals(Team.NEUTRAL) && turnsWaited >= neutralTurnsToWait) {
                     rc.empower(d2toTarget);
                 } else if (targetEC.team.equals(rc.getTeam().opponent()) && turnsWaited >= enemyTurnsToWait) {
                     rc.empower(d2toTarget);
                 } else {
-                    tryMove(getRoughMoveTowards(targetEC.location, 2));
                     ++turnsWaited;
                 }
             } else {
-                tryMove(getRoughMoveTowards(targetEC.location, 2));
                 turnsWaited = 0;
             }
+            if (targetEC.team.equals(Team.NEUTRAL)){
+                tryMove(getRoughMoveTowards(targetEC.location, 2));
+            } else {
+                tryMove(getRoughMoveAvoid(targetEC.location, 2, nearbyAllies));
+            }
+            return;
         }
 
         int buffer = 3;

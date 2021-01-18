@@ -15,9 +15,9 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     int minBiddingInfluence = 500;
     int influenceToSave = 800;
     int minHunterInfluence = 100;
-    double percentPoliticians = 0.5; // should to add to 1
+    double percentPoliticians = 0.25; // should to add to 1
     double percentSlanderers = 0.25; // with
-    double percentMuckrakers = 0.25; // these
+    double percentMuckrakers = 0.5; // these
 
     Node politicianIDs = new Node(-1);
     int politicians = 0;
@@ -29,8 +29,8 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     int mostRecentID = -1;
     boolean recentlyFlagged = false;
     boolean recentHunter = false;
-    int hunterCounter = 7;
-    int muckHunterRatio = 10;
+    int hunterCounter = 3;
+    int muckHunterRatio = 5;
     int turnsToDefend = 50;
     int turnsSinceMuckNear = turnsToDefend;
 
@@ -53,6 +53,10 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         }
         recentlyFlagged = false;
         ++turnsSinceMuckNear;
+        if (muckrakers >= 10) {
+            percentMuckrakers = 0;
+            percentPoliticians = 0.75;
+        }
 
         // scan all politician flags
         Node pointer = politicianIDs;
@@ -214,7 +218,8 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                 }
             } else {
                 if (tryBuildRobot(RobotType.MUCKRAKER, dir, influence - influenceToSave, muckrakerIDs)) {
-                    rc.setFlag(new FlagInfo(closestEnemyEC, team, myLoc).generateFlag());
+                    RobotInfo randomEnemyEC = enemyECs.get((int) (Math.random() * enemyECs.size()));
+                    rc.setFlag(new FlagInfo(randomEnemyEC, team, myLoc).generateFlag());
                     recentlyFlagged = true;
                     recentHunter = true;
                     ++politicians;

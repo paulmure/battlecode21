@@ -189,6 +189,40 @@ public strictfp class RobotPlayer {
         return bestDirection;
     }
 
+    protected Direction getRoughMoveAvoid(MapLocation target, int depth, 
+            ArrayList<MapLocation> nearbyAllies) throws GameActionException {
+        MapLocation me = rc.getLocation();
+        int dx = target.x - me.x;
+        int dy = target.y - me.y;
+        double bestWeight = 0;
+        Direction bestDirection = Direction.CENTER;
+        for (Direction d : getPossibleMoves()) {
+            MapLocation testLoc = me.add(d);
+            boolean valid = true;
+            for (MapLocation ally : nearbyAllies) {
+                if (ally.distanceSquaredTo(testLoc) <= 1) {
+                    valid = false;
+                    break;
+                }
+            }
+            if (!valid) {
+                continue;
+            }
+            double dotProduct = (dx * d.dx + dy * d.dy)
+                    / (Math.sqrt(dx * dx + dy * dy) * Math.sqrt(d.dx * d.dx + d.dy * d.dy));
+            double weight = rc.sensePassability(me.add(d)) * dotProduct;
+            // System.out.println("legal direction " + d + "has weight " + weight);
+            if (depth > 1 && dotProduct > 0) {
+                weight += getRoughMoveInner(me.add(d), target, depth - 1);
+            }
+            if (weight > bestWeight) {
+                bestWeight = weight;
+                bestDirection = d;
+            }
+        }
+        return bestDirection;
+    }
+
     protected double getRoughMoveInner(MapLocation me, MapLocation target, int depth) throws GameActionException {
         int dx = target.x - me.x;
         int dy = target.y - me.y;
@@ -218,22 +252,22 @@ public strictfp class RobotPlayer {
     };
 
     protected ArrayList<Direction> getPossibleMoves() {
-        return getPossibleMoves(true, null);
+        return getPossibleMoves(false, null);
     }
 
     protected ArrayList<Direction> getPossibleMoves(boolean highwayEnab, MapLocation ec) {
         ArrayList<Direction> possibleMoves = new ArrayList<>();
         for (Direction d : Direction.values()) {
             if (rc.canMove(d)) {
-                // if (!highwayEnab) {
-                // if (!isOnHwy(new MapLocation(rc.getLocation().x + d.dx, rc.getLocation().y +
-                // d.dy), ec)) {
-                // possibleMoves.add(d);
-                // }
-                // } else {
-                // possibleMoves.add(d);
-                // }
-                possibleMoves.add(d);
+                if (highwayEnab) {
+                    if (!isOnHwy(new MapLocation(rc.getLocation().x + d.dx, rc.getLocation().y +
+                            d.dy), ec)) {
+                        possibleMoves.add(d);
+                    }
+                } else {
+                    possibleMoves.add(d);
+                }
+                //possibleMoves.add(d);
             }
         }
         return possibleMoves;
@@ -391,7 +425,7 @@ public strictfp class RobotPlayer {
             double crossProduct = (rc.getRoundNum() % 420 < 210 ? 1 : -1) * (ecVecX * targetVecY - ecVecY * targetVecX)
                     / (ecVecLength * targetVecLength); // (-1, 1)
 
-            double totalWeight = r2Weight * crossProduct;
+            double totalWeight = r2Weight /* crossProduct*/;
 
             if (totalWeight > bestWeight) {
                 bestWeight = totalWeight;

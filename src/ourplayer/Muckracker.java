@@ -52,7 +52,7 @@ public class Muckracker extends RobotPlayer implements RoleController {
                 closestEnemySlanderer = r;
                 closestSlandererDist = chebyshevDistance(myLoc, r.location);
             }
-            if (r.team.equals(rc.getTeam()) && r.type.equals(RobotType.MUCKRAKER)) {
+            if (r.team.equals(rc.getTeam()) && (r.type.equals(RobotType.MUCKRAKER)/* || r.type.equals(RobotType.POLITICIAN)*/)) {
                 allies.add(r.location);
             }
             if (r.type.equals(RobotType.ENLIGHTENMENT_CENTER)) {
@@ -112,5 +112,9 @@ public class Muckracker extends RobotPlayer implements RoleController {
         }
 
         tryMove(getBestSpacing(allies));
-    }
+        // Direction bestMove = getBestCloud(getPossibleMoves(), spawnEC, 0, allies);
+        // if (bestMove != null) {
+        //     tryMove(bestMove);
+        // }
+}
 }
