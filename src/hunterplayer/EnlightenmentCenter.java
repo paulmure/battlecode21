@@ -1,4 +1,4 @@
-package ourplayer;
+package hunterplayer;
 
 import java.util.ArrayList;
 
@@ -29,8 +29,6 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     int mostRecentID = -1;
     boolean recentlyFlagged = false;
     boolean recentHunter = false;
-    int hunterCounter = 7;
-    int muckHunterRatio = 10;
     int turnsToDefend = 50;
     int turnsSinceMuckNear = turnsToDefend;
 
@@ -46,6 +44,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         int roundNum = rc.getRoundNum();
         age = roundNum - spawnTurn;
         int influence = rc.getInfluence();
+        Direction dir = randomDirection();
         Team team = rc.getTeam();
         MapLocation myLoc = rc.getLocation();
         if (!recentlyFlagged) {
@@ -183,53 +182,42 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
             }
         }
 
-        // spawn direction selection
-        Direction dir = randomDirection();
+        // spawn loop
         for (int i = 0; i < 8; i++) {
-            if (rc.isLocationOccupied(myLoc.add(dir))) {
-                dir = dir.rotateRight();
-            }
-        }
-
-        if (lowestNeutralEC != null && lowestNeutralEC.influence + 11 <= influence) {
-            if (tryBuildRobot(RobotType.POLITICIAN, dir, lowestNeutralEC.influence + 11, politicianIDs)) {
-                rc.setFlag(new FlagInfo(lowestNeutralEC, team, myLoc).generateFlag());
-                recentlyFlagged = true;
-                recentlyTargeted.add(lowestNeutralEC);
-                ++politicians;
-            }
-        } else if (slanderers <= percentSlanderers * totalUnits
-                && (turnsSinceMuckNear > turnsToDefend || spawnTurn == 1)) {
-            if (tryBuildRobot(RobotType.SLANDERER, dir, bestSlanderer, slandererIDs)) {
-                ++slanderers;
-            }
-        } else if (closestEnemyEC != null && !recentHunter && influence > influenceToSave + minHunterInfluence) {
-            if (hunterCounter < muckHunterRatio) {
+            if (lowestNeutralEC != null && lowestNeutralEC.influence + 11 <= influence) {
+                if (tryBuildRobot(RobotType.POLITICIAN, dir, lowestNeutralEC.influence + 11, politicianIDs)) {
+                    rc.setFlag(new FlagInfo(lowestNeutralEC, team, myLoc).generateFlag());
+                    recentlyFlagged = true;
+                    recentlyTargeted.add(lowestNeutralEC);
+                    ++politicians;
+                    break;
+                }
+            } else if (slanderers <= percentSlanderers * totalUnits
+                    && (turnsSinceMuckNear > turnsToDefend || spawnTurn == 1)) {
+                if (tryBuildRobot(RobotType.SLANDERER, dir, bestSlanderer, slandererIDs)) {
+                    ++slanderers;
+                    break;
+                }
+            } else if (closestEnemyEC != null && !recentHunter && influence > influenceToSave + minHunterInfluence) {
                 if (tryBuildRobot(RobotType.POLITICIAN, dir, influence - influenceToSave, politicianIDs)) {
                     rc.setFlag(new FlagInfo(closestEnemyEC, team, myLoc).generateFlag());
                     recentlyFlagged = true;
                     recentHunter = true;
                     ++politicians;
-                    ++hunterCounter;
+                    break;
                 }
-            } else {
-                if (tryBuildRobot(RobotType.MUCKRAKER, dir, influence - influenceToSave, muckrakerIDs)) {
-                    rc.setFlag(new FlagInfo(closestEnemyEC, team, myLoc).generateFlag());
-                    recentlyFlagged = true;
-                    recentHunter = true;
+            } else if (politicians <= percentPoliticians * totalUnits) {
+                if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100, politicianIDs)) {
+                    recentHunter = false;
                     ++politicians;
-                    hunterCounter = 0;
+                    break;
                 }
             }
-        } else if (politicians <= percentPoliticians * totalUnits) {
-            if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100, politicianIDs)) {
-                recentHunter = false;
-                ++politicians;
+            if (tryBuildRobot(RobotType.MUCKRAKER, dir, 1, muckrakerIDs)) { // someday flag mucks to tank if influence
+                                                                            // is negative
+                ++muckrakers;
             }
-        }
-        if (tryBuildRobot(RobotType.MUCKRAKER, dir, 1, muckrakerIDs)) { // someday flag mucks to tank if influence
-                                                                        // is negative
-            ++muckrakers;
+            dir = dir.rotateRight();
         }
 
         if (rc.getRoundNum() > startBiddingRound) {

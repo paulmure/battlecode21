@@ -1,4 +1,4 @@
-package ourplayer;
+package hunterplayer;
 
 import java.util.ArrayList;
 import java.util.Deque;
@@ -14,8 +14,6 @@ public class Muckracker extends RobotPlayer implements RoleController {
     private int spawnECid;
     ArrayList<RobotInfo> previouslySentECs = new ArrayList<RobotInfo>();
     Deque<RobotInfo> ecsToSend = new LinkedList<RobotInfo>();
-    RobotInfo targetEC = null;
-    boolean isHunter = false;
 
     public Muckracker() throws GameActionException {
         if (spawnEC == null) {
@@ -27,13 +25,6 @@ public class Muckracker extends RobotPlayer implements RoleController {
                         .distanceSquaredTo(rc.getLocation()) < spawnEC.distanceSquaredTo(rc.getLocation()))) {
                     spawnEC = nearby[i].location;
                     spawnECid = nearby[i].ID;
-                }
-            }
-            if (rc.canGetFlag(spawnECid)) {
-                int flag = rc.getFlag(spawnECid);
-                if (flag != 0) {
-                    isHunter = true;
-                    targetEC = new FlagInfo(flag, rc.getTeam(), spawnEC).targetInfo;
                 }
             }
         }
@@ -87,28 +78,6 @@ public class Muckracker extends RobotPlayer implements RoleController {
                 rc.expose(closestEnemySlanderer.location);
             }
             tryMove(getRoughMoveTowards(closestEnemySlanderer.location, 2));
-        }
-
-        if (isHunter && targetEC == null && rc.canGetFlag(spawnECid)) {
-            int flag = rc.getFlag(spawnECid);
-            if (flag != 0) {
-                RobotInfo ec = new FlagInfo(flag, rc.getTeam(), spawnEC).targetInfo;
-                if (ec.team.equals(rc.getTeam().opponent())) {
-                    targetEC = ec;
-                }
-            }
-        }
-
-        if (targetEC != null) {
-            if (rc.canSenseLocation(targetEC.location)) {
-                targetEC = rc.senseRobotAtLocation(targetEC.location);
-                Direction bestMove = getBestCloud(getPossibleMoves(), targetEC.location, 10, allies);
-                if (bestMove != null) {
-                    tryMove(bestMove);
-                }
-            } else {
-                tryMove(getRoughMoveTowards(targetEC.location, 2));
-            }
         }
 
         tryMove(getBestSpacing(allies));
