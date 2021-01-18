@@ -201,11 +201,12 @@ public class Politician extends RobotPlayer implements RoleController {
         if (targetEC != null) {
             int d2toTarget = myLoc.distanceSquaredTo(targetEC.location);
             if (rc.canEmpower(d2toTarget)) {
-                if (rc.senseNearbyRobots(d2toTarget).length == 1 || d2toTarget == 1) {
+                if (rc.senseNearbyRobots(d2toTarget).length == 1) {
                     rc.empower(d2toTarget);
                 } else if (targetEC.team.equals(Team.NEUTRAL) && turnsWaited >= neutralTurnsToWait) {
                     rc.empower(d2toTarget);
-                } else if (targetEC.team.equals(rc.getTeam().opponent()) && turnsWaited >= enemyTurnsToWait) {
+                } else if (targetEC.team.equals(rc.getTeam().opponent()) 
+                        && (turnsWaited >= enemyTurnsToWait || d2toTarget == 1)) {
                     rc.empower(d2toTarget);
                 } else {
                     ++turnsWaited;

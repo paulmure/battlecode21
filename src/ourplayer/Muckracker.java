@@ -44,13 +44,20 @@ public class Muckracker extends RobotPlayer implements RoleController {
         rc.setFlag(0);
 
         RobotInfo closestEnemySlanderer = null;
+        RobotInfo strongestCloseSlanderer = null;
         int closestSlandererDist = 1000;
         ArrayList<MapLocation> allies = new ArrayList<MapLocation>();
         for (RobotInfo r : rc.senseNearbyRobots()) {
-            if (r.type.equals(RobotType.SLANDERER) && !r.team.equals(rc.getTeam())
-                    && chebyshevDistance(myLoc, r.location) < closestSlandererDist) {
-                closestEnemySlanderer = r;
-                closestSlandererDist = chebyshevDistance(myLoc, r.location);
+            if (r.type.equals(RobotType.SLANDERER) && !r.team.equals(rc.getTeam())) {
+                if (chebyshevDistance(myLoc, r.location) < closestSlandererDist) {
+                    closestEnemySlanderer = r;
+                    closestSlandererDist = chebyshevDistance(myLoc, r.location);
+                }
+                if (r.location.distanceSquaredTo(myLoc) <= 12) {
+                    if (strongestCloseSlanderer == null || r.influence > strongestCloseSlanderer.influence) {
+                        strongestCloseSlanderer = r;
+                    }
+                }
             }
             if (r.team.equals(rc.getTeam()) && (r.type.equals(RobotType.MUCKRAKER)/* || r.type.equals(RobotType.POLITICIAN)*/)) {
                 allies.add(r.location);
@@ -83,8 +90,8 @@ public class Muckracker extends RobotPlayer implements RoleController {
         }
 
         if (closestEnemySlanderer != null) {
-            if (rc.canExpose(closestEnemySlanderer.location)) {
-                rc.expose(closestEnemySlanderer.location);
+            if (strongestCloseSlanderer != null && rc.canExpose(strongestCloseSlanderer.location)) {
+                rc.expose(strongestCloseSlanderer.location);
             }
             tryMove(getRoughMoveTowards(closestEnemySlanderer.location, 2));
         }

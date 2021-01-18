@@ -166,9 +166,6 @@ public strictfp class RobotPlayer {
 
     protected Direction getRoughMoveTowards(MapLocation target, int depth) throws GameActionException {
         MapLocation me = rc.getLocation();
-        if (target.isAdjacentTo(me)) {
-            return me.directionTo(target);
-        }
         int dx = target.x - me.x;
         int dy = target.y - me.y;
         double bestWeight = 0;

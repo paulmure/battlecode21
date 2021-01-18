@@ -150,11 +150,16 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
 
         // scan for nearby enemies
         int biggestNearbyEnemy = 0;
+        boolean canSeeEnemyEC = false; // crossstitch lmao
         for (RobotInfo r : rc.senseNearbyRobots()) {
-            if (r.team.equals(rc.getTeam().opponent()) && r.type != RobotType.ENLIGHTENMENT_CENTER) {
-                biggestNearbyEnemy = Math.max(biggestNearbyEnemy, r.influence);
-                if (r.type.equals(RobotType.MUCKRAKER)) {
-                    turnsSinceMuckNear = 0;
+            if (r.team.equals(rc.getTeam().opponent())) {
+                if(r.type != RobotType.ENLIGHTENMENT_CENTER) {
+                    biggestNearbyEnemy = Math.max(biggestNearbyEnemy, r.influence);
+                    if (r.type.equals(RobotType.MUCKRAKER)) {
+                        turnsSinceMuckNear = 0;
+                    }
+                } else {
+                    canSeeEnemyEC = true;
                 }
             }
         }
@@ -174,8 +179,14 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         // get the lowest hp neutral ec we know about
         RobotInfo lowestNeutralEC = null;
         for (RobotInfo r : neutralECs) {
-            if (!recentlyTargeted.contains(r) && (lowestNeutralEC == null || r.influence > lowestNeutralEC.influence)) {
-                lowestNeutralEC = r;
+            if (!recentlyTargeted.contains(r)) {
+                if (lowestNeutralEC == null || r.influence < lowestNeutralEC.influence) {
+                    lowestNeutralEC = r;
+                } else if (r.influence == lowestNeutralEC.influence
+                        && r.location.distanceSquaredTo(myLoc) 
+                        < lowestNeutralEC.location.distanceSquaredTo(myLoc)) {
+                    lowestNeutralEC = r;
+                }
             }
         }
         // get the closest enemy ec we know about
@@ -203,7 +214,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                 ++politicians;
             }
         } else if (slanderers <= percentSlanderers * totalUnits
-                && (turnsSinceMuckNear > turnsToDefend || spawnTurn == 1)) {
+                && (turnsSinceMuckNear > turnsToDefend || spawnTurn == 1) && !canSeeEnemyEC) {
             if (tryBuildRobot(RobotType.SLANDERER, dir, bestSlanderer, slandererIDs)) {
                 ++slanderers;
             }
