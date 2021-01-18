@@ -79,16 +79,18 @@ public strictfp class RobotPlayer {
     }
 
     static void bid() throws GameActionException {
-        int bid = rc.getInfluence() - ((int) (random.nextGaussian() * 50 + 250));
+        // int bid = rc.getInfluence() - ((int) (random.nextGaussian() * 50 + 250));
 
-        if (bid < 1) {
-            bid = 1;
-        }
-        if (bid > rc.getInfluence()) {
-            bid = rc.getInfluence();
-        }
+        // if (bid < 1) {
+        //     bid = 1;
+        // }
+        // if (bid > rc.getInfluence()) {
+        //     bid = rc.getInfluence();
+        // }
 
+        int bid = Math.max(rc.getInfluence(), 100);
         if (rc.canBid(bid)) {
+            System.out.println("I BID "+ bid);
             rc.bid(bid);
         }
     }
@@ -125,8 +127,8 @@ public strictfp class RobotPlayer {
                 }
             }
         }
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
+        if (tryMove(randomDirection()));
+            
     }
 
     /**
