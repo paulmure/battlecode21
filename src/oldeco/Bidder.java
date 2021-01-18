@@ -1,10 +1,10 @@
-package sprintplayer;
+package oldeco;
 
 import battlecode.common.GameActionException;
 
 public class Bidder extends RobotPlayer {
-    private static final int FIRST_ROUND_BID = 250;
-    private static final int INCREMENT = 20;
+    private static final int FIRST_ROUND_BID = 50;
+    private static final int INCREMENT = 5;
     private int roundsLost = 0;
     private int lastBid;
     private int lastRoundVotes;
@@ -12,7 +12,7 @@ public class Bidder extends RobotPlayer {
     public void bid() throws GameActionException {
         int bid;
         int thisRoundVotes = rc.getTeamVotes();
-        if (thisRoundVotes > 750) {
+        if (thisRoundVotes > 1500) {
             return;
         }
 

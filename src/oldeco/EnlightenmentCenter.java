@@ -1,4 +1,4 @@
-package ourplayer;
+package oldeco;
 
 import java.util.ArrayList;
 
@@ -220,21 +220,15 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
             dir = dir.rotateRight();
         }
 
-        // BIDDING
-        //
-        if (rc.getRoundNum() > startBiddingRound && rc.getInfluence() > minBiddingInfluence) {
+        if (rc.getRoundNum() > startBiddingRound) {
 
-            int desiredBid = bidder.bid();
-            if (rc.canBid(desiredBid)) {
-                rc.bid(desiredBid);
+            if (rc.getInfluence() > minBiddingInfluence) {
+                bidder.bid();
+
             }
-
-            System.out.println("bid " + desiredBid);
-            bidder.setLastBid(desiredBid);
         } else {
-
             if (rc.canBid(1)) {
-                System.out.println("bid 1 (from else block)");
+                System.out.println("bid 1");
                 rc.bid(1);
             }
 
