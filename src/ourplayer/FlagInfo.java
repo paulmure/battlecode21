@@ -1,7 +1,5 @@
 package ourplayer;
 
-import javax.tools.DocumentationTool.Location;
-
 import battlecode.common.*;
 
 public class FlagInfo {
@@ -86,11 +84,11 @@ public class FlagInfo {
             // 110 Wall
             //
             //
-            // [min(2^9, influence/4)][type][LOCATIONx][LOCATIONy]
-            // (24)7 3 7 7
+            // [isrobotinfo][min(2^9, influence/4)][type][LOCATIONx][LOCATIONy]
+            // (24) 1 6 3 7 7
         }
 
-        int influence = (flag >>> 15) & 0x1fc;
+        int influence = (flag >>> 14) & 0x1f8;
 
         targetInfo = new RobotInfo(0, targTeam, targType, influence, influence, flagToLoc(flag, spawnEC));
         this.spawnEC = spawnEC;
@@ -128,8 +126,8 @@ public class FlagInfo {
         // type
         flag |= (typeBits & 0x7) << 14;
 
-        //influence
-        flag |= ((Math.min(targetInfo.influence + 3, 511)/4) & 0x7f) << 17;
+        // influence
+        flag |= ((Math.min(targetInfo.influence + 7, 511) / 8) & 0x3f) << 17;
         return flag;
     }
 

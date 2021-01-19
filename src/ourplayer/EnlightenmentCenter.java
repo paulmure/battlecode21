@@ -15,9 +15,9 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     int minBiddingInfluence = 500;
     int influenceToSave = 800;
     int minHunterInfluence = 100;
-    double percentPoliticians = 0.25; // should to add to 1
-    double percentSlanderers = 0.25; // with
-    double percentMuckrakers = 0.5; // these
+    double percentPoliticians = 0.34; // should to add to 1
+    double percentSlanderers = 0.33; // with
+    double percentMuckrakers = 0.33; // these
 
     Node politicianIDs = new Node(-1);
     int politicians = 0;
@@ -53,9 +53,9 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         }
         recentlyFlagged = false;
         ++turnsSinceMuckNear;
-        if (muckrakers >= 10) {
+        if (muckrakers >= 8) {
             percentMuckrakers = 0;
-            percentPoliticians = 0.75;
+            percentPoliticians = 0.67;
         }
 
         // scan all politician flags
@@ -153,7 +153,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         boolean canSeeEnemyEC = false; // crossstitch lmao
         for (RobotInfo r : rc.senseNearbyRobots()) {
             if (r.team.equals(rc.getTeam().opponent())) {
-                if(r.type != RobotType.ENLIGHTENMENT_CENTER) {
+                if (r.type != RobotType.ENLIGHTENMENT_CENTER) {
                     biggestNearbyEnemy = Math.max(biggestNearbyEnemy, r.influence);
                     if (r.type.equals(RobotType.MUCKRAKER)) {
                         turnsSinceMuckNear = 0;
@@ -183,8 +183,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                 if (lowestNeutralEC == null || r.influence < lowestNeutralEC.influence) {
                     lowestNeutralEC = r;
                 } else if (r.influence == lowestNeutralEC.influence
-                        && r.location.distanceSquaredTo(myLoc) 
-                        < lowestNeutralEC.location.distanceSquaredTo(myLoc)) {
+                        && r.location.distanceSquaredTo(myLoc) < lowestNeutralEC.location.distanceSquaredTo(myLoc)) {
                     lowestNeutralEC = r;
                 }
             }
@@ -201,7 +200,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         // spawn direction selection
         Direction dir = randomDirection();
         for (int i = 0; i < 8; i++) {
-            if (rc.isLocationOccupied(myLoc.add(dir))) {
+            if (!rc.onTheMap(myLoc.add(dir)) || rc.isLocationOccupied(myLoc.add(dir))) {
                 dir = dir.rotateRight();
             }
         }

@@ -16,6 +16,7 @@ public class Politician extends RobotPlayer implements RoleController {
     final int hunterInfluence = 50;
     final int neutralTurnsToWait = 5;
     final int enemyTurnsToWait = 15;
+    final int minStableInfluence = 200;
     boolean converted = false;
     boolean isHunter = false;
     int turnsWaited = 0;
@@ -91,7 +92,9 @@ public class Politician extends RobotPlayer implements RoleController {
     }
 
     public void run() throws GameActionException {
-        if (rc.getRoundNum() >= 1495 && rc.getTeamVotes() < 750 && rc.getRobotCount() > 100) { // cause it would suck to take the map at the end
+        if (rc.getRoundNum() >= 1495 && rc.getTeamVotes() < 750 && rc.getRobotCount() > 100) { // cause it would suck to
+                                                                                               // take the map at the
+                                                                                               // end
             if (rc.canEmpower(9)) { // and not kill 2 1hp politicians and lose on votes
                 rc.empower(9);
             }
@@ -162,7 +165,7 @@ public class Politician extends RobotPlayer implements RoleController {
                     closestECDist = chebyshevDistance(myLoc, r.location);
                 }
                 if (targetEC != null && targetEC.location.equals(r.location)) {
-                    if (r.team.equals(rc.getTeam())) {
+                    if (r.team.equals(rc.getTeam()) && r.influence > minStableInfluence) {
                         targetEC = null;
                     } else {
                         targetEC = r;
@@ -205,7 +208,7 @@ public class Politician extends RobotPlayer implements RoleController {
                     rc.empower(d2toTarget);
                 } else if (targetEC.team.equals(Team.NEUTRAL) && turnsWaited >= neutralTurnsToWait) {
                     rc.empower(d2toTarget);
-                } else if (targetEC.team.equals(rc.getTeam().opponent()) 
+                } else if ((targetEC.team.equals(rc.getTeam().opponent()) || targetEC.team.equals(rc.getTeam()))
                         && (turnsWaited >= enemyTurnsToWait || d2toTarget == 1)) {
                     rc.empower(d2toTarget);
                 } else {
@@ -214,10 +217,14 @@ public class Politician extends RobotPlayer implements RoleController {
             } else {
                 turnsWaited = 0;
             }
-            if (targetEC.team.equals(Team.NEUTRAL)){
+            if (targetEC.team.equals(Team.NEUTRAL)) {
                 tryMove(getRoughMoveTowards(targetEC.location, 2));
             } else {
-                tryMove(getRoughMoveAvoid(targetEC.location, 2, nearbyAllies));
+                if (rc.canSenseLocation(targetEC.location)) {
+                    tryMove(getRoughMoveAvoid(targetEC.location, 2, nearbyAllies));
+                } else {
+                    tryMove(getRoughMoveTowards(targetEC.location, 2));
+                }
             }
             return;
         }
