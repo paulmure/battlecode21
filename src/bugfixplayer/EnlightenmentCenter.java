@@ -1,4 +1,4 @@
-package ourplayer;
+package bugfixplayer;
 
 import java.util.ArrayList;
 
@@ -55,8 +55,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         ++turnsSinceMuckNear;
         if (muckrakers >= 8) {
             percentMuckrakers = 0;
-            percentPoliticians = 0.6;
-            percentSlanderers = 0.4;
+            percentPoliticians = 0.67;
         }
 
         // scan all politician flags
@@ -67,19 +66,17 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
             if (rc.canGetFlag(id)) {
                 int flag = rc.getFlag(id);
                 if (flag != 0) {
-                    RobotInfo received = (new FlagInfo(flag, team, myLoc)).targetInfo;
-                    if(received.type != null && received.type.equals(RobotType.ENLIGHTENMENT_CENTER)){
-                        boolean newEC = true;
-                        for (int i = 0; i < ecList.size(); ++i) {
-                            RobotInfo r = ecList.get(i);
-                            if (r.location.equals(received.location)) {
-                                ecList.set(i, received);
-                                newEC = false;
-                            }
+                    RobotInfo received = new FlagInfo(flag, team, myLoc).targetInfo;
+                    boolean newEC = true;
+                    for (int i = 0; i < ecList.size(); ++i) {
+                        RobotInfo r = ecList.get(i);
+                        if (r.location.equals(received.location)) {
+                            ecList.set(i, received);
+                            newEC = false;
                         }
-                        if (newEC) {
-                            ecList.add(received);
-                        }
+                    }
+                    if (newEC) {
+                        ecList.add(received);
                     }
                 }
             } else {
@@ -98,21 +95,16 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                 int flag = rc.getFlag(id);
                 if (flag != 0) {
                     RobotInfo received = new FlagInfo(flag, team, myLoc).targetInfo;
-                    if(received.type != null && received.type.equals(RobotType.ENLIGHTENMENT_CENTER)){
-                        boolean newEC = true;
-                        for (int i = 0; i < ecList.size(); ++i) {
-                            RobotInfo r = ecList.get(i);
-                            if (r.location.equals(received.location)) {
-                                ecList.set(i, received);
-                                newEC = false;
-                            }
+                    boolean newEC = true;
+                    for (int i = 0; i < ecList.size(); ++i) {
+                        RobotInfo r = ecList.get(i);
+                        if (r.location.equals(received.location)) {
+                            ecList.set(i, received);
+                            newEC = false;
                         }
-                        if (newEC) {
-                            ecList.add(received);
-                        }
-                    }else{
-                        
-                        System.out.println(directions[((received.influence/8) & 3)*2] + " wall received " + received.location);
+                    }
+                    if (newEC) {
+                        ecList.add(received);
                     }
                 }
             } else {
@@ -220,6 +212,11 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                 recentlyTargeted.add(lowestNeutralEC);
                 ++politicians;
             }
+        } else if (slanderers <= percentSlanderers * totalUnits
+                && (turnsSinceMuckNear > turnsToDefend || spawnTurn == 1) && !canSeeEnemyEC) {
+            if (tryBuildRobot(RobotType.SLANDERER, dir, bestSlanderer, slandererIDs)) {
+                ++slanderers;
+            }
         } else if (closestEnemyEC != null && !recentHunter && influence > influenceToSave + minHunterInfluence) {
             if (hunterCounter < muckHunterRatio) {
                 if (tryBuildRobot(RobotType.POLITICIAN, dir, influence - influenceToSave, politicianIDs)) {
@@ -239,13 +236,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                     hunterCounter = 0;
                 }
             }
-        } else if (slanderers <= percentSlanderers * totalUnits
-                && (turnsSinceMuckNear > turnsToDefend || spawnTurn == 1) && !canSeeEnemyEC) {
-            if (tryBuildRobot(RobotType.SLANDERER, dir, bestSlanderer, slandererIDs)) {
-                recentHunter = false;
-                ++slanderers;
-            }
-        }  else if (politicians <= percentPoliticians * totalUnits) {
+        } else if (politicians <= percentPoliticians * totalUnits) {
             if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100, politicianIDs)) {
                 recentHunter = false;
                 ++politicians;

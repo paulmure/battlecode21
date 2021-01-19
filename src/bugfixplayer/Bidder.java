@@ -1,4 +1,4 @@
-package ourplayer;
+package bugfixplayer;
 
 import battlecode.common.GameActionException;
 
@@ -50,7 +50,7 @@ public class Bidder extends RobotPlayer {
                 // β < α < 1
                 int decrement = (int) (Math.pow(WS_ALPHA, WS_BETA * roundsWon) * WS_K);
                 bid = lastBid - decrement;
-                //System.out.println("decrement by " + decrement);
+                System.out.println("decrement by " + decrement);
             } else {
                 bid = 1;
             }
@@ -63,7 +63,7 @@ public class Bidder extends RobotPlayer {
                 increment = (int) Math.min(Math.pow(LS_GROWTH, roundsLost), influence / 2);
             }
 
-            //System.out.println("increment by " + increment);
+            System.out.println("increment by " + increment);
             bid = lastBid + (roundsLost * increment);
         }
 
@@ -71,7 +71,7 @@ public class Bidder extends RobotPlayer {
             bid = rc.getInfluence();
         }
         
-        //System.out.printf("roundsWon = %d, roundsLost = %d\n", roundsWon, roundsLost);
+        System.out.printf("roundsWon = %d, roundsLost = %d\n", roundsWon, roundsLost);
 
         return Math.max(bid, 0);
     }

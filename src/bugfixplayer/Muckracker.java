@@ -1,4 +1,4 @@
-package ourplayer;
+package bugfixplayer;
 
 import java.util.ArrayList;
 import java.util.Deque;
@@ -13,10 +13,9 @@ public class Muckracker extends RobotPlayer implements RoleController {
     private MapLocation spawnEC;
     private int spawnECid;
     ArrayList<RobotInfo> previouslySentECs = new ArrayList<RobotInfo>();
-    Deque<FlagInfo> flagsToSend = new LinkedList<FlagInfo>();
+    Deque<RobotInfo> ecsToSend = new LinkedList<RobotInfo>();
     RobotInfo targetEC = null;
     boolean isHunter = false;
-    boolean[] foundWall = new boolean[4]; //N, E, S, W
 
     public Muckracker() throws GameActionException {
         if (spawnEC == null) {
@@ -47,41 +46,6 @@ public class Muckracker extends RobotPlayer implements RoleController {
         RobotInfo closestEnemySlanderer = null;
         RobotInfo strongestCloseSlanderer = null;
         int closestSlandererDist = 1000;
-
-        //look for walls
-        for(int i = 0; i < 4; ++i){
-            if(!foundWall[i]){
-                MapLocation loc = null;
-                Direction awayFromWall = Direction.CENTER;
-                switch(i){
-                    case 0: //NORTH
-                        loc = rc.getLocation().translate(0, 5);
-                        awayFromWall = Direction.SOUTH;
-                        break;
-                    case 1: //EAST
-                        loc = rc.getLocation().translate(5, 0);
-                        awayFromWall = Direction.WEST;
-                        break;
-                    case 2: //SOUTH
-                        loc = rc.getLocation().translate(0, -5);
-                        awayFromWall = Direction.NORTH;
-                        break;
-                    case 3: //WEST
-                        loc = rc.getLocation().translate(-5, 0);
-                        awayFromWall = Direction.EAST;
-                }
-                
-                if(!rc.onTheMap(loc)){
-                    while(!rc.onTheMap(loc.add(awayFromWall))){
-                        loc = loc.add(awayFromWall);
-                    }
-                    foundWall[i] = true;
-                    flagsToSend.add(new FlagInfo(true, rc.getTeam(), loc, spawnEC, i));//hacky lmao
-                    //System.out.println("Found wall at " + loc);
-                }
-            }
-        }
-
         ArrayList<MapLocation> allies = new ArrayList<MapLocation>();
         for (RobotInfo r : rc.senseNearbyRobots()) {
             if (r.type.equals(RobotType.SLANDERER) && !r.team.equals(rc.getTeam())) {
@@ -100,7 +64,7 @@ public class Muckracker extends RobotPlayer implements RoleController {
                 allies.add(r.location);
             }
             if (r.type.equals(RobotType.ENLIGHTENMENT_CENTER)) {
-                if (!flagsToSend.contains(r) && r.location != spawnEC) {
+                if (!ecsToSend.contains(r) && r.location != spawnEC) {
                     boolean newInfo = true;
                     for (int i = 0; i < previouslySentECs.size(); ++i) {
                         RobotInfo ec = previouslySentECs.get(i);
@@ -115,14 +79,15 @@ public class Muckracker extends RobotPlayer implements RoleController {
                     }
                     if (newInfo) {
                         previouslySentECs.add(r);
-                        flagsToSend.add(new FlagInfo(r, rc.getTeam(), spawnEC));
+                        ecsToSend.add(r);
                     }
                 }
             }
         }
 
-        if (!flagsToSend.isEmpty()) {
-            rc.setFlag(flagsToSend.poll().generateFlag());
+        if (!ecsToSend.isEmpty()) {
+            FlagInfo ecFlag = new FlagInfo(ecsToSend.poll(), rc.getTeam(), spawnEC);
+            rc.setFlag(ecFlag.generateFlag());
         }
 
         if (closestEnemySlanderer != null) {

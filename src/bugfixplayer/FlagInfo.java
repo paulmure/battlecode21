@@ -1,4 +1,4 @@
-package ourplayer;
+package bugfixplayer;
 
 import battlecode.common.*;
 
@@ -15,11 +15,10 @@ public class FlagInfo {
     private MapLocation spawnEC;
 
     // CONSTRUCTOR FOR WALLS
-    public FlagInfo(boolean isWall, Team allyTeam, MapLocation location, MapLocation spawnEC, int direction) {
-        //direction: 0=NORTH, 1=EAST, 2=SOUTH, 3=WEST. SAVED IN "INFLUENCE"
+    public FlagInfo(boolean isWall, Team allyTeam, MapLocation location, MapLocation spawnEC) {
         this.spawnEC = spawnEC;
         this.allyTeam = allyTeam;
-        targetInfo = new RobotInfo(0, Team.NEUTRAL, null, direction*8, 0, location);
+        targetInfo = new RobotInfo(0, Team.NEUTRAL, null, 0, 0, location);
     }
 
     // CONSTRUCTOR FOR ROBOT --> FLAG
@@ -97,28 +96,29 @@ public class FlagInfo {
     }
 
     protected int generateFlag() {
-        int typeBits = 0b110; //wall
-        if(targetInfo.type != null){
-            switch (targetInfo.type) {
-                case ENLIGHTENMENT_CENTER:
-                    if (targetInfo.team == allyTeam.opponent()) {
-                        typeBits = 0b000;
-                    } else if (targetInfo.team == allyTeam) {
-                        typeBits = 0b001;
-                    } else {
-                        typeBits = 0b010;
-                    }
-                    break;
-                case MUCKRAKER:
-                    typeBits = 0b011;
-                    break;
-                case POLITICIAN:
-                    typeBits = 0b100;
-                    break;
-                case SLANDERER:
-                    typeBits = 0b101;      
-            }
-        } 
+        int typeBits = 0;
+        switch (targetInfo.type) {
+            case ENLIGHTENMENT_CENTER:
+                if (targetInfo.team == allyTeam.opponent()) {
+                    typeBits = 0b000;
+                } else if (targetInfo.team == allyTeam) {
+                    typeBits = 0b001;
+                } else {
+                    typeBits = 0b010;
+                }
+                break;
+            case MUCKRAKER:
+                typeBits = 0b011;
+                break;
+            case POLITICIAN:
+                typeBits = 0b100;
+                break;
+            case SLANDERER:
+                typeBits = 0b101;
+                break;
+            default:
+                typeBits = 0b110;
+        }
 
         // location
         int flag = (((targetInfo.location.y - spawnEC.y + 63) & 0x7f) << 7)
