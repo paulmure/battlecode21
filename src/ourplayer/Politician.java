@@ -30,6 +30,9 @@ public class Politician extends RobotPlayer implements RoleController {
     ArrayList<RobotInfo> previouslySentECs = new ArrayList<RobotInfo>();
     Deque<RobotInfo> ecsToSend = new LinkedList<RobotInfo>();
     RobotInfo targetEC = null;
+    int[] walls = { -1, -1, -1, -1 }; // N, E, S, W
+    int wallRepulsionDistance = 3;
+    int[] possibleEmpowerDists = {1, 2, 4, 5, 8, 9};
 
     public Politician() throws GameActionException {
         spawnRound = rc.getRoundNum();
@@ -99,10 +102,12 @@ public class Politician extends RobotPlayer implements RoleController {
                 rc.empower(9);
             }
         }
+
         if (converted) {
             convertedRun();
             return;
         }
+
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
         MapLocation myLoc = rc.getLocation();
         age = rc.getRoundNum() - spawnRound;
@@ -114,6 +119,39 @@ public class Politician extends RobotPlayer implements RoleController {
             age = rc.getRoundNum() - Math.max(spawnRound, 300);
         }
 
+        // look for walls
+        for (int i = 0; i < 4; ++i) {
+            if (walls[i] == -1) {
+                MapLocation loc = null;
+                Direction awayFromWall = Direction.CENTER;
+                switch (i) {
+                    case 0: // NORTH
+                        loc = rc.getLocation().translate(0, 5);
+                        awayFromWall = Direction.SOUTH;
+                        break;
+                    case 1: // EAST
+                        loc = rc.getLocation().translate(5, 0);
+                        awayFromWall = Direction.WEST;
+                        break;
+                    case 2: // SOUTH
+                        loc = rc.getLocation().translate(0, -5);
+                        awayFromWall = Direction.NORTH;
+                        break;
+                    case 3: // WEST
+                        loc = rc.getLocation().translate(-5, 0);
+                        awayFromWall = Direction.EAST;
+                }
+
+                if (!rc.onTheMap(loc)) {
+                    while (!rc.onTheMap(loc.add(awayFromWall))) {
+                        loc = loc.add(awayFromWall);
+                    }
+                    walls[i] = i % 2 == 0 ? loc.y : loc.x;
+                    // System.out.println("Found wall at " + loc);
+                }
+            }
+        }
+
         int mucksInRange = 0;
         RobotInfo closestEnemyMuck = null;
         int closestMuckDist = 1000;
@@ -121,6 +159,27 @@ public class Politician extends RobotPlayer implements RoleController {
         int closestECDist = 1000;
         ArrayList<MapLocation> allies = new ArrayList<MapLocation>();
         ArrayList<MapLocation> nearbyAllies = new ArrayList<MapLocation>();
+        RobotInfo closestVisibleEC = null;
+
+        ////
+        if (walls[0] != -1 && walls[0] - myLoc.y <= wallRepulsionDistance) {
+            System.out.println("near north wall");
+            allies.add(new MapLocation(myLoc.x, walls[0]));
+        }
+        if (walls[1] != -1 && walls[1] - myLoc.x <= wallRepulsionDistance) {
+            System.out.println("near east wall");
+            allies.add(new MapLocation(walls[1], myLoc.y));
+        }
+        if (walls[2] != -1 && myLoc.y - walls[2] <= wallRepulsionDistance) {
+            System.out.println("near south wall");
+            allies.add(new MapLocation(myLoc.x, walls[2]));
+        }
+        if (walls[3] != -1 && myLoc.x - walls[3] <= wallRepulsionDistance) {
+            System.out.println("near west wall");
+            allies.add(new MapLocation(walls[3], myLoc.y));
+
+        }
+        ////
         for (RobotInfo r : nearbyRobots) {
             // detect muckrakers in range as well as the closest one
             if (r.type.equals(RobotType.MUCKRAKER) && !r.team.equals(rc.getTeam())) {
@@ -164,13 +223,31 @@ public class Politician extends RobotPlayer implements RoleController {
                     notOurEC = r;
                     closestECDist = chebyshevDistance(myLoc, r.location);
                 }
+                if (closestVisibleEC == null || chebyshevDistance(myLoc, r.location) < chebyshevDistance(myLoc, closestVisibleEC.location)) {
+                    closestVisibleEC = r;
+                }
                 if (targetEC != null && targetEC.location.equals(r.location)) {
-                    if (r.team.equals(rc.getTeam()) && r.influence > minStableInfluence) {
+                    if (r.team.equals(rc.getTeam()) && r.influence > minStableInfluence 
+                            && rc.getEmpowerFactor(rc.getTeam(), 0) < 5) {
                         targetEC = null;
                     } else {
                         targetEC = r;
                     }
                 }
+            }
+        }
+
+        if (closestVisibleEC != null) {
+            int ecDist = myLoc.distanceSquaredTo(closestVisibleEC.location);
+            if (rc.canEmpower(ecDist) && 3 * rc.senseNearbyRobots(ecDist).length < rc.getEmpowerFactor(rc.getTeam(), 0)) {
+                rc.empower(ecDist);
+            }
+        }
+
+        if (rc.isReady()) {
+            int efficientEmpowerRadius = efficientEmpowerRadius();
+            if (efficientEmpowerRadius > 0) {
+                rc.empower(efficientEmpowerRadius);
             }
         }
 
@@ -180,7 +257,7 @@ public class Politician extends RobotPlayer implements RoleController {
         }
 
         if (notOurEC != null && (targetEC == null || !notOurEC.location.equals(targetEC.location))) {
-            if (rc.getConviction() >= 0.5 * notOurEC.conviction) {
+            if (rc.getConviction() * rc.getEmpowerFactor(rc.getTeam(), 0) >= 0.5 * notOurEC.conviction) {
                 if (rc.canEmpower(myLoc.distanceSquaredTo(notOurEC.location))
                         && myLoc.isAdjacentTo(notOurEC.location)) {
                     rc.empower(myLoc.distanceSquaredTo(notOurEC.location));
@@ -306,6 +383,47 @@ public class Politician extends RobotPlayer implements RoleController {
         }
 
         tryMove(getBestSpacing(allies));
+    }
+
+    public int efficientEmpowerRadius() {
+        double bestScore = 1;
+        int bestRadius = 0;
+        int myConviction = rc.getConviction();
+        for (int i : possibleEmpowerDists) {
+            double score = empowerScore(rc.senseNearbyRobots(i), myConviction);
+            if (score > bestScore) {
+                bestScore = score;
+                bestRadius = i;
+            }
+        }
+        return bestRadius;
+    }
+
+    public double empowerScore(RobotInfo[] included, int politicianInfluence) {
+        if (included.length == 0) {
+            return 0;
+        }
+        Team team = rc.getTeam();
+        int distributed = ((int)(politicianInfluence * rc.getEmpowerFactor(team, 0) - 10)) / included.length;
+        int influenceUsed = 0;
+        double unitsKilled = 0;
+        for (RobotInfo r : included) {
+            if (r.team.equals(team)) {
+                influenceUsed += Math.min(distributed, r.influence - r.conviction);
+            } else {
+                if (distributed > r.conviction) {
+                    ++unitsKilled;
+                } 
+                if (r.type.equals(RobotType.POLITICIAN)) {
+                    influenceUsed += Math.min(distributed, r.influence + r.conviction);
+                } else if (r.type.equals(RobotType.ENLIGHTENMENT_CENTER)) {
+                    influenceUsed += distributed;
+                } else {
+                    influenceUsed += Math.min(distributed, r.conviction);
+                }
+            }
+        }
+        return unitsKilled * influenceUsed / politicianInfluence;
     }
 
 }

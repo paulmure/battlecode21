@@ -1,6 +1,6 @@
 package bugfixplayer.utils;
 
-import ourplayer.utils.LinkedListPQ;
+import bugfixplayer.utils.LinkedListPQ;
 
 public class LinkedListPQTest {
     public static void assertEquals(int actual, int expected) {

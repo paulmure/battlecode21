@@ -33,13 +33,24 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     int muckHunterRatio = 5;
     int turnsToDefend = 50;
     int turnsSinceMuckNear = turnsToDefend;
+    boolean scoutsSent = false;
+    boolean investigativeJournalistSent = false;
+    int minJournalistInfluence = 125;
 
     ArrayList<RobotInfo> ecList = new ArrayList<RobotInfo>();
     ArrayList<RobotInfo> recentlyTargeted = new ArrayList<RobotInfo>();
+    int[] scoutIDs = new int[8];
+    Direction firstDeadScout = null;
 
-    public EnlightenmentCenter() {
+    public EnlightenmentCenter() throws GameActionException {
         bidder = new Bidder();
         spawnTurn = rc.getRoundNum();
+        MapLocation myLoc = rc.getLocation();
+        for (int i = 0; i < directions.length; ++i) {
+            if (!rc.onTheMap(myLoc.add(directions[i]))) {
+                scoutIDs[i] = 0;
+            }
+        }
     }
 
     public void run() throws GameActionException {
@@ -58,6 +69,15 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
             percentPoliticians = 0.6;
             percentSlanderers = 0.4;
         }
+        if (!scoutsSent) {
+            scoutsSent = true;
+            for (int i = 0; i < scoutIDs.length; ++i) {
+                if (scoutIDs[i] == 0) {
+                    scoutsSent = false;
+                    break;
+                }
+            }
+        }
 
         // scan all politician flags
         Node pointer = politicianIDs;
@@ -68,7 +88,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                 int flag = rc.getFlag(id);
                 if (flag != 0) {
                     RobotInfo received = (new FlagInfo(flag, team, myLoc)).targetInfo;
-                    if(received.type != null && received.type.equals(RobotType.ENLIGHTENMENT_CENTER)){
+                    if (received.type != null && received.type.equals(RobotType.ENLIGHTENMENT_CENTER)) {
                         boolean newEC = true;
                         for (int i = 0; i < ecList.size(); ++i) {
                             RobotInfo r = ecList.get(i);
@@ -98,7 +118,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                 int flag = rc.getFlag(id);
                 if (flag != 0) {
                     RobotInfo received = new FlagInfo(flag, team, myLoc).targetInfo;
-                    if(received.type != null && received.type.equals(RobotType.ENLIGHTENMENT_CENTER)){
+                    if (received.type != null && received.type.equals(RobotType.ENLIGHTENMENT_CENTER)) {
                         boolean newEC = true;
                         for (int i = 0; i < ecList.size(); ++i) {
                             RobotInfo r = ecList.get(i);
@@ -110,14 +130,22 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                         if (newEC) {
                             ecList.add(received);
                         }
-                    }else{
-                        
-                        System.out.println(directions[((received.influence/8) & 3)*2] + " wall received " + received.location);
+                    } else {
+
+                        System.out.println(
+                                directions[((received.influence / 8) & 7)] + " wall received " + received.location);
                     }
                 }
             } else {
                 // RIP
                 pointer = pointer.remove();
+                if (firstDeadScout == null) {
+                    for (int i = 0; i < 8; ++i) {
+                        if (scoutIDs[i] == id) {
+                            firstDeadScout = directions[i];
+                        }
+                    }
+                }
                 --muckrakers;
             }
         }
@@ -198,11 +226,16 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         }
         // get the closest enemy ec we know about
         RobotInfo closestEnemyEC = null;
+        RobotInfo farthestEnemyEC = null;
         for (RobotInfo r : enemyECs) {
             if (closestEnemyEC == null
                     || chebyshevDistance(myLoc, r.location) < chebyshevDistance(myLoc, closestEnemyEC.location)) {
                 closestEnemyEC = r;
-            }
+            } 
+            if (farthestEnemyEC == null
+                    || chebyshevDistance(myLoc, r.location) < chebyshevDistance(myLoc, farthestEnemyEC.location)) {
+                farthestEnemyEC = r;
+            } 
         }
 
         // spawn direction selection
@@ -220,6 +253,13 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                 recentlyTargeted.add(lowestNeutralEC);
                 ++politicians;
             }
+        } else if (!investigativeJournalistSent && firstDeadScout != null && influence > minJournalistInfluence) {
+            if (tryBuildRobot(RobotType.MUCKRAKER, dir, Math.max(minJournalistInfluence, influence - influenceToSave), muckrakerIDs)) { 
+                rc.setFlag(new FlagInfo(false, null, myLoc, myLoc, directionToInt(firstDeadScout)).generateFlag());
+                recentlyFlagged = true;
+                ++muckrakers;
+                investigativeJournalistSent = true;
+            }
         } else if (closestEnemyEC != null && !recentHunter && influence > influenceToSave + minHunterInfluence) {
             if (hunterCounter < muckHunterRatio) {
                 if (tryBuildRobot(RobotType.POLITICIAN, dir, influence - influenceToSave, politicianIDs)) {
@@ -231,11 +271,10 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                 }
             } else {
                 if (tryBuildRobot(RobotType.MUCKRAKER, dir, influence - influenceToSave, muckrakerIDs)) {
-                    RobotInfo randomEnemyEC = enemyECs.get((int) (Math.random() * enemyECs.size()));
-                    rc.setFlag(new FlagInfo(randomEnemyEC, team, myLoc).generateFlag());
+                    rc.setFlag(new FlagInfo(farthestEnemyEC, team, myLoc).generateFlag());
                     recentlyFlagged = true;
                     recentHunter = true;
-                    ++politicians;
+                    ++muckrakers;
                     hunterCounter = 0;
                 }
             }
@@ -245,15 +284,34 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                 recentHunter = false;
                 ++slanderers;
             }
-        }  else if (politicians <= percentPoliticians * totalUnits) {
+        } else if (politicians <= percentPoliticians * totalUnits) {
             if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100, politicianIDs)) {
                 recentHunter = false;
                 ++politicians;
             }
         }
-        if (tryBuildRobot(RobotType.MUCKRAKER, dir, 1, muckrakerIDs)) { // someday flag mucks to tank if influence
-                                                                        // is negative
-            ++muckrakers;
+        if (rc.isReady()) {
+            if (!scoutsSent) {
+                Direction scoutDirection = dir;
+                for (int i = 0; i < directions.length; ++i) {
+                    if (scoutIDs[i] == 0 && !rc.isLocationOccupied(myLoc.add(directions[i]))) {
+                        scoutDirection = directions[i];
+                        break;
+                    }
+                }
+                if (tryBuildRobot(RobotType.MUCKRAKER, scoutDirection, 1, muckrakerIDs)) { // someday flag mucks to tank
+                                                                                           // if influence
+                    // is negative
+                    rc.setFlag(new FlagInfo(false, null, myLoc, myLoc, directionToInt(scoutDirection)).generateFlag());
+                    recentlyFlagged = true;
+                    ++muckrakers;
+                    scoutIDs[directionToInt(scoutDirection)] = mostRecentID;
+                }
+            } else {
+                if (tryBuildRobot(RobotType.MUCKRAKER, dir, 1, muckrakerIDs)) {
+                    ++muckrakers;
+                }
+            }
         }
 
         // BIDDING
@@ -265,12 +323,12 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                 rc.bid(desiredBid);
             }
 
-            //System.out.println("bid " + desiredBid);
+            // System.out.println("bid " + desiredBid);
             bidder.setLastBid(desiredBid);
         } else {
 
             if (rc.canBid(1)) {
-                //System.out.println("bid 1 (from else block)");
+                // System.out.println("bid 1 (from else block)");
                 rc.bid(1);
             }
 

@@ -3,7 +3,7 @@ package bugfixplayer;
 import java.util.ArrayList;
 
 import battlecode.common.*;
-import ourplayer.utils.Node;
+import bugfixplayer.utils.Node;
 
 public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     private Bidder bidder;

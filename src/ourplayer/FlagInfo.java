@@ -14,9 +14,11 @@ public class FlagInfo {
     private Team allyTeam;
     private MapLocation spawnEC;
 
-    // CONSTRUCTOR FOR WALLS
+    // CONSTRUCTOR FOR WALLS/DIRECTIONS
     public FlagInfo(boolean isWall, Team allyTeam, MapLocation location, MapLocation spawnEC, int direction) {
         //direction: 0=NORTH, 1=EAST, 2=SOUTH, 3=WEST. SAVED IN "INFLUENCE"
+        //direction: 0=NORTH, 1=NORTHEAST, 2=EAST, 3=SOUTHEAST, 
+        //           4=SOUTH, 5=SOUTHWEST, 6=WEST, 7=NORTHWEST. SAVED IN "INFLUENCE"
         this.spawnEC = spawnEC;
         this.allyTeam = allyTeam;
         targetInfo = new RobotInfo(0, Team.NEUTRAL, null, direction*8, 0, location);

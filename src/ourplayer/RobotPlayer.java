@@ -453,4 +453,57 @@ public strictfp class RobotPlayer {
         return (((target.y - spawnEC.y + 63) & 0x7f) << 7) + ((target.x - spawnEC.x + 63) & 0x7f);
     }
 
+    protected static int getRotationalDistance(Direction a, Direction b) {
+        int leftDistance = 0;
+        int rightDistance = 0;
+        Direction temp = b;
+        while (!temp.equals(a)) {
+            temp = temp.rotateLeft();
+            ++leftDistance;
+        }
+        while (!b.equals(a)) {
+            b = b.rotateRight();
+            ++rightDistance;
+        }
+        return Math.min(leftDistance, rightDistance);
+    }
+
+    protected static boolean closerClockwise(Direction a, Direction b) {
+        int leftDistance = 0;
+        int rightDistance = 0;
+        Direction temp = a;
+        while (!temp.equals(b)) {
+            temp = temp.rotateLeft();
+            ++leftDistance;
+        }
+        while (!a.equals(b)) {
+            a = a.rotateRight();
+            ++rightDistance;
+        }
+        return leftDistance < rightDistance;
+    }
+
+    protected static int directionToInt (Direction d) {
+        switch(d) {
+            case NORTH:
+                return 0;
+            case NORTHEAST:
+                return 1;
+            case EAST:
+                return 2;
+            case SOUTHEAST:
+                return 3;
+            case SOUTH:
+                return 4;
+            case SOUTHWEST:
+                return 5;
+            case WEST:
+                return 6;
+            case NORTHWEST:
+                return 7;
+            default:
+                return 0;
+        }
+    }
+
 }

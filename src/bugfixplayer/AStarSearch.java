@@ -2,7 +2,7 @@ package bugfixplayer;
 
 import battlecode.common.*;
 import java.util.*;
-import ourplayer.utils.LinkedListPQ;
+import bugfixplayer.utils.LinkedListPQ;
 
 public strictfp class AStarSearch extends RobotPlayer {
 
