@@ -48,7 +48,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         MapLocation myLoc = rc.getLocation();
         for (int i = 0; i < directions.length; ++i) {
             if (!rc.onTheMap(myLoc.add(directions[i]))) {
-                scoutIDs[i] = 0;
+                scoutIDs[i] = -1;
             }
         }
     }

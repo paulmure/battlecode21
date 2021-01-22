@@ -163,19 +163,19 @@ public class Politician extends RobotPlayer implements RoleController {
 
         ////
         if (walls[0] != -1 && walls[0] - myLoc.y <= wallRepulsionDistance) {
-            System.out.println("near north wall");
+            // System.out.println("near north wall");
             allies.add(new MapLocation(myLoc.x, walls[0]));
         }
         if (walls[1] != -1 && walls[1] - myLoc.x <= wallRepulsionDistance) {
-            System.out.println("near east wall");
+            // System.out.println("near east wall");
             allies.add(new MapLocation(walls[1], myLoc.y));
         }
         if (walls[2] != -1 && myLoc.y - walls[2] <= wallRepulsionDistance) {
-            System.out.println("near south wall");
+            // System.out.println("near south wall");
             allies.add(new MapLocation(myLoc.x, walls[2]));
         }
         if (walls[3] != -1 && myLoc.x - walls[3] <= wallRepulsionDistance) {
-            System.out.println("near west wall");
+            // System.out.println("near west wall");
             allies.add(new MapLocation(walls[3], myLoc.y));
 
         }
