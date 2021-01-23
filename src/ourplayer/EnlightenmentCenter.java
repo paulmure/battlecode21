@@ -15,9 +15,9 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     int minBiddingInfluence = 500;
     int influenceToSave = 800;
     int minHunterInfluence = 100;
-    double percentPoliticians = 0.34; // should to add to 1
-    double percentSlanderers = 0.33; // with
-    double percentMuckrakers = 0.33; // these
+    double percentPoliticians = 0.25; // should to add to 1
+    double percentSlanderers = 0.25; // with
+    double percentMuckrakers = 0.5; // these
 
     Node politicianIDs = new Node(-1);
     int politicians = 0;
@@ -64,7 +64,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         }
         recentlyFlagged = false;
         ++turnsSinceMuckNear;
-        if (muckrakers >= 8) {
+        if (scoutsSent && muckrakers >= 8) {
             percentMuckrakers = 0;
             percentPoliticians = 0.6;
             percentSlanderers = 0.4;
@@ -182,7 +182,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
             }
         }
 
-        int totalUnits = politicians + muckrakers + slanderers;
+        int totalUnits = politicians + Math.min(muckrakers, 8) + slanderers; // warning: giga scuffed
 
         // scan for nearby enemies
         int biggestNearbyEnemy = 0;
@@ -239,65 +239,130 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         }
 
         // spawn direction selection
-        Direction dir = randomDirection();
-        for (int i = 0; i < 8; i++) {
-            if (!rc.onTheMap(myLoc.add(dir)) || rc.isLocationOccupied(myLoc.add(dir))) {
-                dir = dir.rotateRight();
+        Direction dir = null;
+        Direction slandererDir = null;
+        if (!scoutsSent) {
+            for (int i = 0; i < 8; i++) {
+                if (rc.onTheMap(myLoc.add(directions[i])) && !rc.isLocationOccupied(myLoc.add(directions[i])) 
+                        && scoutIDs[i] != 0) {
+                    dir = directions[i];
+                    break;
+                }
             }
-        }
-
-        if (lowestNeutralEC != null && lowestNeutralEC.influence + 11 <= influence) {
-            if (tryBuildRobot(RobotType.POLITICIAN, dir, lowestNeutralEC.influence + 11, politicianIDs)) {
-                rc.setFlag(new FlagInfo(lowestNeutralEC, team, myLoc).generateFlag());
-                recentlyFlagged = true;
-                recentlyTargeted.add(lowestNeutralEC);
-                ++politicians;
+            if (dir == null) {
+                for (int i = 1; i < 8; i += 2) {
+                    if (rc.onTheMap(myLoc.add(directions[i])) && !rc.isLocationOccupied(myLoc.add(directions[i]))) {
+                        dir = directions[i];
+                    }
+                }    
             }
-        } else if (!investigativeJournalistSent && firstDeadScout != null && influence > minJournalistInfluence) {
-            if (tryBuildRobot(RobotType.MUCKRAKER, dir, Math.max(minJournalistInfluence, influence - influenceToSave), muckrakerIDs)) { 
-                rc.setFlag(new FlagInfo(false, null, myLoc, myLoc, directionToInt(firstDeadScout)).generateFlag());
-                recentlyFlagged = true;
-                ++muckrakers;
-                investigativeJournalistSent = true;
+            if (dir == null) {
+                for (int i = 0; i < 8; i += 2) {
+                    if (rc.onTheMap(myLoc.add(directions[i])) && !rc.isLocationOccupied(myLoc.add(directions[i]))) {
+                        dir = directions[i];
+                    }
+                }    
             }
-        } else if (closestEnemyEC != null && !recentHunter && influence > influenceToSave + minHunterInfluence) {
-            if (hunterCounter < muckHunterRatio) {
-                if (tryBuildRobot(RobotType.POLITICIAN, dir, influence - influenceToSave, politicianIDs)) {
-                    rc.setFlag(new FlagInfo(closestEnemyEC, team, myLoc).generateFlag());
-                    recentlyFlagged = true;
-                    recentHunter = true;
-                    ++politicians;
-                    ++hunterCounter;
+            slandererDir = dir;
+        } else {
+            if (firstDeadScout != null) {
+                int closeDist = 10;
+                int farDist = -1;
+                for (int i = 0; i < 8; i++) {
+                    if (rc.onTheMap(myLoc.add(directions[i])) && !rc.isLocationOccupied(myLoc.add(directions[i]))) {
+                        int dist = getRotationalDistance(firstDeadScout, directions[i]);
+                        if (dist < closeDist) {
+                            closeDist = dist;
+                            dir = directions[i];
+                        }
+                        if (dist > farDist) {
+                            farDist = dist;
+                            slandererDir = directions[i];
+                        }
+                    }
                 }
             } else {
-                if (tryBuildRobot(RobotType.MUCKRAKER, dir, influence - influenceToSave, muckrakerIDs)) {
-                    rc.setFlag(new FlagInfo(farthestEnemyEC, team, myLoc).generateFlag());
-                    recentlyFlagged = true;
-                    recentHunter = true;
-                    ++muckrakers;
-                    hunterCounter = 0;
-                }
-            }
-        } else if (slanderers <= percentSlanderers * totalUnits
-                && (turnsSinceMuckNear > turnsToDefend || spawnTurn == 1) && !canSeeEnemyEC) {
-            if (tryBuildRobot(RobotType.SLANDERER, dir, bestSlanderer, slandererIDs)) {
-                recentHunter = false;
-                ++slanderers;
-            }
-        } else if (politicians <= percentPoliticians * totalUnits) {
-            if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100, politicianIDs)) {
-                recentHunter = false;
-                ++politicians;
+                dir = randomDirection();
+                for (int i = 0; i < 8; i++) {
+                    if (rc.onTheMap(myLoc.add(dir)) && !rc.isLocationOccupied(myLoc.add(dir))) {
+                        break;
+                    }
+                    dir = dir.rotateRight();
+                }    
+                slandererDir = dir;
             }
         }
-        if (rc.isReady()) {
-            if (!scoutsSent) {
-                Direction scoutDirection = dir;
-                for (int i = 0; i < directions.length; ++i) {
+        if (rc.isReady() && dir != null && influence > 0) {
+            if (lowestNeutralEC != null && lowestNeutralEC.influence + 11 <= influence) {
+                if (tryBuildRobot(RobotType.POLITICIAN, dir, lowestNeutralEC.influence + Math.max(11, (influence - lowestNeutralEC.influence) / 2), politicianIDs)) {
+                    rc.setFlag(new FlagInfo(lowestNeutralEC, team, myLoc).generateFlag());
+                    recentlyFlagged = true;
+                    recentlyTargeted.add(lowestNeutralEC);
+                    ++politicians;
+                }
+            } else if (!investigativeJournalistSent && firstDeadScout != null && influence > minJournalistInfluence) {
+                if (tryBuildRobot(RobotType.MUCKRAKER, dir, Math.max(minJournalistInfluence, influence - influenceToSave), muckrakerIDs)) { 
+                    rc.setFlag(new FlagInfo(false, null, myLoc, myLoc, directionToInt(firstDeadScout)).generateFlag());
+                    recentlyFlagged = true;
+                    ++muckrakers;
+                    investigativeJournalistSent = true;
+                }
+            } else if (closestEnemyEC != null && !recentHunter && influence > influenceToSave + minHunterInfluence) {
+                if (hunterCounter < muckHunterRatio) {
+                    if (tryBuildRobot(RobotType.POLITICIAN, dir, influence - influenceToSave, politicianIDs)) {
+                        rc.setFlag(new FlagInfo(closestEnemyEC, team, myLoc).generateFlag());
+                        recentlyFlagged = true;
+                        recentHunter = true;
+                        ++politicians;
+                        ++hunterCounter;
+                    }
+                } else {
+                    if (tryBuildRobot(RobotType.MUCKRAKER, dir, influence - influenceToSave, muckrakerIDs)) {
+                        rc.setFlag(new FlagInfo(farthestEnemyEC, team, myLoc).generateFlag());
+                        recentlyFlagged = true;
+                        recentHunter = true;
+                        ++muckrakers;
+                        hunterCounter = 0;
+                    }
+                }
+            } else if (slanderers <= percentSlanderers * totalUnits
+                    && (turnsSinceMuckNear > turnsToDefend || spawnTurn == 1) && !canSeeEnemyEC) {
+                if (tryBuildRobot(RobotType.SLANDERER, slandererDir, bestSlanderer, slandererIDs)) {
+                    recentHunter = false;
+                    ++slanderers;
+                }
+            } else if (politicians <= percentPoliticians * totalUnits && influence >= 15) {
+                if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100, politicianIDs)) {
+                    recentHunter = false;
+                    ++politicians;
+                }
+            }
+        }
+        if (rc.isReady() && dir != null) {
+            if (!scoutsSent && influence > 0) {
+                Direction scoutDirection = null;
+                for (int i = 0; i < directions.length; i += 2) {
                     if (scoutIDs[i] == 0 && !rc.isLocationOccupied(myLoc.add(directions[i]))) {
                         scoutDirection = directions[i];
                         break;
                     }
+                }
+                if (scoutDirection == null) {
+                    for (int i = 1; i < directions.length; i += 2) {
+                        if (scoutIDs[i] == 0 && !rc.isLocationOccupied(myLoc.add(directions[i]))) {
+                            scoutDirection = directions[i];
+                            break;
+                        }
+                    }    
+                } if (scoutDirection == null) {
+                    for (int i = 0; i < 8; i += 2) {
+                        if (rc.onTheMap(myLoc.add(directions[i])) && !rc.isLocationOccupied(myLoc.add(directions[i]))) {
+                            dir = directions[i];
+                        }
+                    }                 
+                    if (tryBuildRobot(RobotType.MUCKRAKER, dir, 1, muckrakerIDs)) {
+                        ++muckrakers;
+                    }    
                 }
                 if (tryBuildRobot(RobotType.MUCKRAKER, scoutDirection, 1, muckrakerIDs)) { // someday flag mucks to tank
                                                                                            // if influence
@@ -307,7 +372,16 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                     ++muckrakers;
                     scoutIDs[directionToInt(scoutDirection)] = mostRecentID;
                 }
+            } else if (influence > 0) {
+                if (tryBuildRobot(RobotType.MUCKRAKER, dir, 1, muckrakerIDs)) {
+                    ++muckrakers;
+                }
             } else {
+                for (int i = 0; i < 8; i += 2) {
+                    if (rc.onTheMap(myLoc.add(directions[i])) && !rc.isLocationOccupied(myLoc.add(directions[i]))) {
+                        dir = directions[i];
+                    }
+                }                 
                 if (tryBuildRobot(RobotType.MUCKRAKER, dir, 1, muckrakerIDs)) {
                     ++muckrakers;
                 }

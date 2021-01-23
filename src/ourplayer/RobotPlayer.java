@@ -318,11 +318,9 @@ public strictfp class RobotPlayer {
         // System.out.println("spawnEC: "+spawnEC);
         int ecVecX = rc.getLocation().x - spawnEC.x;
         int ecVecY = rc.getLocation().y - spawnEC.y;
-        double ecVecLength = Math.sqrt(ecVecX * ecVecX + ecVecY * ecVecY);
 
         int targetVecX = 0;
         int targetVecY = 0;
-        double targetVecLength = 1;
 
         MapLocation myLoc = rc.getLocation();
 
@@ -348,7 +346,6 @@ public strictfp class RobotPlayer {
             // System.out.println("targetY: " + targetVecY + " dy: " + d.dy);
             targetVecX = d.dx;
             targetVecY = d.dy;
-            targetVecLength = Math.sqrt(targetVecX * targetVecX + targetVecY * targetVecY);
 
             // to calculate r^2 to given move, use the current pos (ecVec) and add the
             // move's vector (targetVec), then r^2 it
@@ -391,11 +388,9 @@ public strictfp class RobotPlayer {
         // System.out.println("spawnEC: "+spawnEC);
         int ecVecX = rc.getLocation().x - spawnEC.x;
         int ecVecY = rc.getLocation().y - spawnEC.y;
-        double ecVecLength = Math.sqrt(ecVecX * ecVecX + ecVecY * ecVecY);
 
         int targetVecX = 0;
         int targetVecY = 0;
-        double targetVecLength = 1;
         // a standing weight of 1 treats standing still as a perfectly perpendicular
         // move, 0 is a perfectly parallel
         double bestWeight = standingWeight / (1 + (Math.abs(targetRadius - (ecVecX * ecVecX + ecVecY * ecVecY))));
@@ -408,7 +403,6 @@ public strictfp class RobotPlayer {
             // System.out.println("targetY: " + targetVecY + " dy: " + d.dy);
             targetVecX = d.dx;
             targetVecY = d.dy;
-            targetVecLength = Math.sqrt(targetVecX * targetVecX + targetVecY * targetVecY);
 
             // to calculate r^2 to given move, use the current pos (ecVec) and add the
             // move's vector (targetVec), then r^2 it
@@ -418,9 +412,6 @@ public strictfp class RobotPlayer {
             // y = 1 / (ax + 1)
             // adjust a to produce steeper or smoother down
             double r2Weight = 1 / (1 + deltaR2); // (0, 1]
-
-            double crossProduct = (rc.getRoundNum() % 420 < 210 ? 1 : -1) * (ecVecX * targetVecY - ecVecY * targetVecX)
-                    / (ecVecLength * targetVecLength); // (-1, 1)
 
             double totalWeight = r2Weight /* crossProduct*/;
 
@@ -443,6 +434,10 @@ public strictfp class RobotPlayer {
         // hard?: weight moves by how clockwise they are (negative for backwards)
         // "perpendicularity" of vector to ec and vector to move
         // cross product
+    }
+
+    protected int influenceEmpowered (int inRange) {
+        return ((int)((rc.getConviction() - 10) * rc.getEmpowerFactor(rc.getTeam(), 0))) / inRange;
     }
 
     protected static MapLocation flagToLoc(int flag, MapLocation spawnEC) {

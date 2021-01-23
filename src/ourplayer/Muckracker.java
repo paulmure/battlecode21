@@ -98,23 +98,25 @@ public class Muckracker extends RobotPlayer implements RoleController {
         ArrayList<MapLocation> allies = new ArrayList<MapLocation>();
 
         if (walls[0] != -1 && walls[0] - myLoc.y <= wallRepulsionDistance) {
-            System.out.println("near north wall");
+            // System.out.println("near north wall");
             allies.add(new MapLocation(myLoc.x, walls[0]));
         }
         if (walls[1] != -1 && walls[1] - myLoc.x <= wallRepulsionDistance) {
-            System.out.println("near east wall");
+            // System.out.println("near east wall");
             allies.add(new MapLocation(walls[1], myLoc.y));
         }
         if (walls[2] != -1 && myLoc.y - walls[2] <= wallRepulsionDistance) {
-            System.out.println("near south wall");
+            // System.out.println("near south wall");
             allies.add(new MapLocation(myLoc.x, walls[2]));
         }
         if (walls[3] != -1 && myLoc.x - walls[3] <= wallRepulsionDistance) {
-            System.out.println("near west wall");
+            // System.out.println("near west wall");
             allies.add(new MapLocation(walls[3], myLoc.y));
 
         }
 
+        RobotInfo closestAllyEC = null;
+        int nearbyEnemyInfluence = 0;
         for (RobotInfo r : rc.senseNearbyRobots()) {
             if (r.type.equals(RobotType.SLANDERER) && !r.team.equals(rc.getTeam())) {
                 if (chebyshevDistance(myLoc, r.location) < closestSlandererDist) {
@@ -130,9 +132,16 @@ public class Muckracker extends RobotPlayer implements RoleController {
             if (r.team.equals(rc.getTeam())
                     && (r.type.equals(RobotType.MUCKRAKER) || r.type.equals(RobotType.POLITICIAN))) {
                 allies.add(r.location);
+            } 
+            if (!r.team.equals(rc.getTeam())) {
+                nearbyEnemyInfluence += r.conviction;
             }
             if (r.type.equals(RobotType.ENLIGHTENMENT_CENTER)) {
-                if (!flagsToSend.contains(r) && r.location != spawnEC) {
+                if (r.team.equals(rc.getTeam()) && (closestAllyEC == null 
+                        || chebyshevDistance(myLoc, r.location) < chebyshevDistance(myLoc, closestAllyEC.location))) {
+                    closestAllyEC = r;
+                }
+                if (r.location != spawnEC) {
                     boolean newInfo = true;
                     for (int i = 0; i < previouslySentECs.size(); ++i) {
                         RobotInfo ec = previouslySentECs.get(i);
@@ -186,6 +195,11 @@ public class Muckracker extends RobotPlayer implements RoleController {
             }
         }
 
+        if (closestAllyEC != null && closestAllyEC.influence < nearbyEnemyInfluence 
+                && myLoc.distanceSquaredTo(closestAllyEC.location) == 1) {
+            return;
+        }
+
         if (targetLocation != null) {
             boolean exhausted = true;
             for (int i = 0; i < walls.length; ++i) {
@@ -209,7 +223,7 @@ public class Muckracker extends RobotPlayer implements RoleController {
                     targetLocation = null;
                 }
             } else if (!orthogonal && (walls[directionToInt(targetDirection.rotateLeft()) / 2] != -1
-                    || walls[directionToInt(targetDirection.rotateLeft()) / 2] != -1)) {
+                    || walls[directionToInt(targetDirection.rotateRight()) / 2] != -1)) {
                 if (walls[directionToInt(targetDirection.rotateLeft()) / 2] != -1) {
                     targetDirection = targetDirection.rotateRight().rotateRight();
                 } else {
