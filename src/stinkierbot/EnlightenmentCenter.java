@@ -1,9 +1,9 @@
-package ourplayer;
+package stinkierbot;
 
 import java.util.ArrayList;
 
 import battlecode.common.*;
-import ourplayer.utils.Node;
+import stinkierbot.utils.Node;
 
 public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     private Bidder bidder;
@@ -13,10 +13,8 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     int age;
     int startBiddingRound = 300;
     int minBiddingInfluence = 500;
+    int influenceToSave = 800;
     int minHunterInfluence = 100;
-    int minInfluenceToSave = 100;
-    int maxInfluenceToSave = 800;
-    int maxSaveRound = 200;
     double percentPoliticians = 0.25; // should to add to 1
     double percentSlanderers = 0.25; // with
     double percentMuckrakers = 0.5; // these
@@ -33,7 +31,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     boolean recentHunter = false;
     int hunterCounter = 3;
     int muckHunterRatio = 5;
-    int turnsToDefend = 33;
+    int turnsToDefend = 50;
     int turnsSinceMuckNear = turnsToDefend;
     boolean scoutsSent = false;
     boolean investigativeJournalistSent = false;
@@ -66,11 +64,11 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         }
         recentlyFlagged = false;
         ++turnsSinceMuckNear;
-        if (scoutsSent && muckrakers >= 8) {
-            percentMuckrakers = 0;
-            percentPoliticians = 0.6;
-            percentSlanderers = 0.4;
-        }
+        // if (scoutsSent && muckrakers >= 8) {
+        //     percentMuckrakers = 0;
+        //     percentPoliticians = 0.6;
+        //     percentSlanderers = 0.4;
+        // }
         if (!scoutsSent) {
             scoutsSent = true;
             for (int i = 0; i < scoutIDs.length; ++i) {
@@ -80,7 +78,6 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                 }
             }
         }
-        int influenceToSave = Math.min(maxInfluenceToSave, minInfluenceToSave + (maxInfluenceToSave - minInfluenceToSave) * rc.getRoundNum() / maxSaveRound);
 
         // scan all politician flags
         Node pointer = politicianIDs;
@@ -334,8 +331,8 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                     recentHunter = false;
                     ++slanderers;
                 }
-            } else if (politicians <= percentPoliticians * totalUnits && influence >= 16) {
-                if (tryBuildRobot(RobotType.POLITICIAN, dir, 16 + (influence / 200) * 2, politicianIDs)) {
+            } else if (politicians <= percentPoliticians * totalUnits && influence >= 15) {
+                if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100, politicianIDs)) {
                     recentHunter = false;
                     ++politicians;
                 }
@@ -358,10 +355,16 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                         }
                     }    
                 } if (scoutDirection == null) {
+                    for (int i = 0; i < 8; i += 2) {
+                        if (rc.onTheMap(myLoc.add(directions[i])) && !rc.isLocationOccupied(myLoc.add(directions[i]))) {
+                            dir = directions[i];
+                        }
+                    }                 
                     if (tryBuildRobot(RobotType.MUCKRAKER, dir, 1, muckrakerIDs)) {
                         ++muckrakers;
                     }    
-                } else if (tryBuildRobot(RobotType.MUCKRAKER, scoutDirection, 1, muckrakerIDs)) { // someday flag mucks to tank
+                }
+                if (tryBuildRobot(RobotType.MUCKRAKER, scoutDirection, 1, muckrakerIDs)) { // someday flag mucks to tank
                                                                                            // if influence
                     // is negative
                     rc.setFlag(new FlagInfo(false, null, myLoc, myLoc, directionToInt(scoutDirection)).generateFlag());
