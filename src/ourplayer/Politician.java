@@ -33,7 +33,7 @@ public class Politician extends RobotPlayer implements RoleController {
     RobotInfo targetEC = null;
     int[] walls = { -1, -1, -1, -1 }; // N, E, S, W
     int wallRepulsionDistance = 3;
-    int[] possibleEmpowerDists = {1, 2, 4, 5, 8, 9};
+    int[] possibleEmpowerDists = { 1, 2, 4, 5, 8, 9 };
 
     public Politician() throws GameActionException {
         spawnRound = rc.getRoundNum();
@@ -223,7 +223,8 @@ public class Politician extends RobotPlayer implements RoleController {
                     notOurEC = r;
                     closestECDist = chebyshevDistance(myLoc, r.location);
                 }
-                if (closestVisibleEC == null || chebyshevDistance(myLoc, r.location) < chebyshevDistance(myLoc, closestVisibleEC.location)) {
+                if (closestVisibleEC == null
+                        || chebyshevDistance(myLoc, r.location) < chebyshevDistance(myLoc, closestVisibleEC.location)) {
                     closestVisibleEC = r;
                 }
                 if (targetEC != null && targetEC.location.equals(r.location)) {
@@ -237,10 +238,11 @@ public class Politician extends RobotPlayer implements RoleController {
         }
 
         // if (closestVisibleEC != null) {
-        //     int ecDist = myLoc.distanceSquaredTo(closestVisibleEC.location);
-        //     if (rc.canEmpower(ecDist) && 3 * rc.senseNearbyRobots(ecDist).length < rc.getEmpowerFactor(rc.getTeam(), 0)) {
-        //         rc.empower(ecDist);
-        //     }
+        // int ecDist = myLoc.distanceSquaredTo(closestVisibleEC.location);
+        // if (rc.canEmpower(ecDist) && 3 * rc.senseNearbyRobots(ecDist).length <
+        // rc.getEmpowerFactor(rc.getTeam(), 0)) {
+        // rc.empower(ecDist);
+        // }
         // }
 
         if (rc.isReady()) {
@@ -281,10 +283,15 @@ public class Politician extends RobotPlayer implements RoleController {
             if (rc.getConviction() > biggestEnemyMuck.conviction * 0.25
                     && biggestEnemyMuck.conviction > minEnemyBigmuckInfluence) {
                 int d2toMuck = myLoc.distanceSquaredTo(biggestEnemyMuck.location);
-                if (rc.canEmpower(d2toMuck) && influenceEmpowered(rc.senseNearbyRobots(d2toMuck).length) > biggestEnemyMuck.conviction) {// previously d2muck (adjacent to)
+                if (rc.canEmpower(d2toMuck)
+                        && influenceEmpowered(rc.senseNearbyRobots(d2toMuck).length) > biggestEnemyMuck.conviction) {// previously
+                                                                                                                     // d2muck
+                                                                                                                     // (adjacent
+                                                                                                                     // to)
                     rc.empower(d2toMuck);
-                } else { 
-                    tryMove(getRoughMoveTowards(biggestEnemyMuck.location, 2));            
+                } else {
+                    System.out.println("running at big muck");
+                    tryMove(getRoughMoveTowards(biggestEnemyMuck.location, 2));
                 }
             }
         }
@@ -318,11 +325,17 @@ public class Politician extends RobotPlayer implements RoleController {
         }
 
         int buffer = 4;
+        int emergencyBuffer = 1;
         if (closestEnemyMuck != null) {
             int d2toMuck = myLoc.distanceSquaredTo(closestEnemyMuck.location);
-            if (rc.canEmpower(9) && mucksInRange > 1) {// previously d2muck (adjacent to)
-                rc.empower(9);
-            } else if (spawnEC.distanceSquaredTo(closestEnemyMuck.location) <= getTargetRadius()
+            if (spawnEC.distanceSquaredTo(closestEnemyMuck.location) <= getTargetRadius()
+                    + 2 * Math.sqrt(getTargetRadius()) * emergencyBuffer + emergencyBuffer * emergencyBuffer) { // foiling
+                System.out.println("weewoo");
+                if (canKill(closestEnemyMuck)) {
+                    rc.empower(d2toMuck);
+                }
+            }
+            if (spawnEC.distanceSquaredTo(closestEnemyMuck.location) <= getTargetRadius()
                     + 2 * Math.sqrt(getTargetRadius()) * buffer + buffer * buffer) { // foiling
                 if (rc.canEmpower(d2toMuck) && d2toMuck <= 2) {
                     rc.empower(d2toMuck);
@@ -345,7 +358,7 @@ public class Politician extends RobotPlayer implements RoleController {
         if (rc.getRoundNum() >= 1495 && rc.getTeamVotes() < 750 && rc.getRobotCount() > 100) { // cause it would suck to
             // take the map at the
             // end
-                if (rc.canEmpower(9)) { // and not kill 2 1hp politicians and lose on votes
+            if (rc.canEmpower(9)) { // and not kill 2 1hp politicians and lose on votes
                 rc.empower(9);
             }
         }
@@ -425,6 +438,7 @@ public class Politician extends RobotPlayer implements RoleController {
         for (int i : possibleEmpowerDists) {
             double score = empowerScore(rc.senseNearbyRobots(i), myConviction);
             if (score > bestScore) {
+                System.out.println("exploding at radius " + i + " is efficient with score " + score);
                 bestScore = score;
                 bestRadius = i;
             }
@@ -437,7 +451,7 @@ public class Politician extends RobotPlayer implements RoleController {
             return 0;
         }
         Team team = rc.getTeam();
-        int distributed = (int)(((politicianInfluence - 10) / included.length) * rc.getEmpowerFactor(team, 0));
+        int distributed = (int) (((politicianInfluence - 10) / included.length) * rc.getEmpowerFactor(team, 0));
         int distributedAlly = ((politicianInfluence - 10) / included.length);
         int influenceUsed = 0;
         double unitsKilled = 0;
@@ -445,15 +459,15 @@ public class Politician extends RobotPlayer implements RoleController {
             if (r.team.equals(team)) {
                 if (r.type.equals(RobotType.ENLIGHTENMENT_CENTER)) {
                     influenceUsed += distributedAlly;
-                } else if (r.type.equals(RobotType.MUCKRAKER)){
-                    influenceUsed += Math.min(distributed, Math.max(r.influence*0.7 - r.conviction, 0));
+                } else if (r.type.equals(RobotType.MUCKRAKER)) {
+                    influenceUsed += Math.min(distributed, Math.max(r.influence * 0.7 - r.conviction, 0));
                 } else {
                     influenceUsed += Math.min(distributed, r.influence - r.conviction);
                 }
             } else {
                 if (distributed > r.conviction) {
                     ++unitsKilled;
-                } 
+                }
                 if (r.type.equals(RobotType.POLITICIAN)) {
                     influenceUsed += Math.min(distributed, r.influence + r.conviction);
                 } else if (r.type.equals(RobotType.ENLIGHTENMENT_CENTER)) {
@@ -467,7 +481,13 @@ public class Politician extends RobotPlayer implements RoleController {
                 }
             }
         }
-        return unitsKilled * influenceUsed / politicianInfluence;
+        return unitsKilled * (influenceUsed + 10) / (politicianInfluence < 50 ? 16 : politicianInfluence) ;
+    }
+
+    boolean canKill(RobotInfo r) {
+        int d2toUnit = rc.getLocation().distanceSquaredTo(r.location);
+        return rc.canEmpower(d2toUnit) && (int) (((rc.getConviction() - 10) / rc.senseNearbyRobots(d2toUnit).length) 
+                * rc.getEmpowerFactor(rc.getTeam(), 0)) > r.conviction;
     }
 
 }
