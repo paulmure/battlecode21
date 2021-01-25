@@ -289,8 +289,11 @@ public class Politician extends RobotPlayer implements RoleController {
                                                                                                                      // (adjacent
                                                                                                                      // to)
                     rc.empower(d2toMuck);
-                } else {
-                    System.out.println("running at big muck");
+                } else if (rc.canEmpower(d2toMuck) && d2toMuck <= 2) {
+                    rc.empower(d2toMuck);
+                }
+                else {
+                    // System.out.println("running at big muck");
                     tryMove(getRoughMoveTowards(biggestEnemyMuck.location, 2));
                 }
             }
@@ -330,7 +333,7 @@ public class Politician extends RobotPlayer implements RoleController {
             int d2toMuck = myLoc.distanceSquaredTo(closestEnemyMuck.location);
             if (spawnEC.distanceSquaredTo(closestEnemyMuck.location) <= getTargetRadius()
                     + 2 * Math.sqrt(getTargetRadius()) * emergencyBuffer + emergencyBuffer * emergencyBuffer) { // foiling
-                System.out.println("weewoo");
+                // System.out.println("weewoo");
                 if (canKill(closestEnemyMuck)) {
                     rc.empower(d2toMuck);
                 }
@@ -438,7 +441,6 @@ public class Politician extends RobotPlayer implements RoleController {
         for (int i : possibleEmpowerDists) {
             double score = empowerScore(rc.senseNearbyRobots(i), myConviction);
             if (score > bestScore) {
-                System.out.println("exploding at radius " + i + " is efficient with score " + score);
                 bestScore = score;
                 bestRadius = i;
             }
