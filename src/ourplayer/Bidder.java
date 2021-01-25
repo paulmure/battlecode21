@@ -6,10 +6,10 @@ public class Bidder extends RobotPlayer {
     private static final int FIRST_ROUND_BID = 50;
     private static final int BASE_INCREMENT = 5;
     // WS = Win Streak, LS = Lost Streak
-    private static final double WS_ALPHA = 0.9;
-    private static final double WS_BETA = 0.3;
+    private static int WS_ALPHA = 1;
+    private static int WS_BETA = 10;
     private static final double WS_K = 10;
-    private static final double LS_GROWTH = 5;
+    private static final double LS_GROWTH = 1.5;
     private static final int INCREMENT_INFLUENCE_THRESHOLD = 1200;
 
     private int roundsLost = 0;
@@ -46,11 +46,19 @@ public class Bidder extends RobotPlayer {
 
             // the lowest we want to bid is 1
             if (lastBid > 1) {
-                // increment = [ α ^ (β * roundsWon) ] * k
+                // decrement = [ α ^ (β * roundsWon) ] * k
                 // β < α < 1
-                int decrement = (int) (Math.pow(WS_ALPHA, WS_BETA * roundsWon) * WS_K);
+                // int decrement = (int) (Math.pow(WS_ALPHA, WS_BETA * roundsWon) * WS_K);
+                double numer = WS_BETA-WS_ALPHA;
+                // System.out.println("frac");
+                // System.out.println(numer);
+                double denom = Math.exp(5.0-(roundsWon/4.0))+1;
+                // System.out.println(denom);
+                // System.out.println("==");
+                int decrement = (int) (numer/denom) + WS_ALPHA;
                 bid = lastBid - decrement;
-                //System.out.println("decrement by " + decrement);
+                // System.out.println("rounds lost "+ roundsLost);
+                // System.out.println("ourplayer decrement by " + decrement);
             } else {
                 bid = 1;
             }
@@ -63,7 +71,7 @@ public class Bidder extends RobotPlayer {
                 increment = (int) Math.min(Math.pow(LS_GROWTH, roundsLost), influence / 2);
             }
 
-            //System.out.println("increment by " + increment);
+            // System.out.println("increment by " + increment);
             bid = lastBid + (roundsLost * increment);
         }
 
@@ -71,7 +79,8 @@ public class Bidder extends RobotPlayer {
             bid = rc.getInfluence();
         }
         
-        //System.out.printf("roundsWon = %d, roundsLost = %d\n", roundsWon, roundsLost);
+        // System.out.println("bid final: "+bid);
+        // System.out.println("=======");
 
         return Math.max(bid, 0);
     }

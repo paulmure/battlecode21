@@ -1,9 +1,9 @@
-package mucknerfplayer;
+package bidold;
 
 import java.util.ArrayList;
 
 import battlecode.common.*;
-import mucknerfplayer.utils.Node;
+import ourplayer.utils.Node;
 
 public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     private Bidder bidder;
@@ -13,8 +13,10 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     int age;
     int startBiddingRound = 300;
     int minBiddingInfluence = 500;
-    int influenceToSave = 800;
     int minHunterInfluence = 100;
+    int minInfluenceToSave = 100;
+    int maxInfluenceToSave = 800;
+    int maxSaveRound = 200;
     double percentPoliticians = 0.25; // should to add to 1
     double percentSlanderers = 0.25; // with
     double percentMuckrakers = 0.5; // these
@@ -31,7 +33,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
     boolean recentHunter = false;
     int hunterCounter = 3;
     int muckHunterRatio = 5;
-    int turnsToDefend = 50;
+    int turnsToDefend = 33;
     int turnsSinceMuckNear = turnsToDefend;
     boolean scoutsSent = false;
     boolean investigativeJournalistSent = false;
@@ -78,6 +80,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                 }
             }
         }
+        int influenceToSave = Math.min(maxInfluenceToSave, minInfluenceToSave + (maxInfluenceToSave - minInfluenceToSave) * rc.getRoundNum() / maxSaveRound);
 
         // scan all politician flags
         Node pointer = politicianIDs;
@@ -331,8 +334,8 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
                     recentHunter = false;
                     ++slanderers;
                 }
-            } else if (politicians <= percentPoliticians * totalUnits && influence >= 15) {
-                if (tryBuildRobot(RobotType.POLITICIAN, dir, 15 + influence / 100, politicianIDs)) {
+            } else if (politicians <= percentPoliticians * totalUnits && influence >= 16) {
+                if (tryBuildRobot(RobotType.POLITICIAN, dir, 16 + (influence / 200) * 2, politicianIDs)) {
                     recentHunter = false;
                     ++politicians;
                 }
@@ -393,14 +396,12 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
 
             // System.out.println("bid " + desiredBid);
             bidder.setLastBid(desiredBid);
-            System.out.println("ENEMY BID: "+desiredBid);
-        } else {
+        } else if (rc.getTeamVotes() < 751) {
 
             if (rc.canBid(1)) {
                 // System.out.println("bid 1 (from else block)");
                 rc.bid(1);
             }
-
         }
 
         if (rc.getRoundNum() % 50 == 0) {
