@@ -389,7 +389,7 @@ public class EnlightenmentCenter extends RobotPlayer implements RoleController {
         //
         if (rc.getRoundNum() > startBiddingRound && rc.getInfluence() > minBiddingInfluence) {
 
-            int desiredBid = bidder.bid();
+            int desiredBid = bidder.bid(influence / 2);
             if (rc.canBid(desiredBid)) {
                 rc.bid(desiredBid);
             }

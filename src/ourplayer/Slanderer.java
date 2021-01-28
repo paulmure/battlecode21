@@ -30,7 +30,8 @@ public class Slanderer extends RobotPlayer implements RoleController {
     final int initialEndRadius2 = 6;
     final double passabilityMultiplier = 45; // change this to change outer radius^2
     private double endRadius2 = 35;
-    private double beginRadius2 = 4;
+    private double beginRadius2 = 8;
+    int[] walls = { -1, -1, -1, -1 }; // N, E, S, W
 
     public Slanderer() throws GameActionException {
         age = 0;
@@ -55,6 +56,42 @@ public class Slanderer extends RobotPlayer implements RoleController {
 
     public void run() throws GameActionException {
         MapLocation myLoc = rc.getLocation();
+
+        for (int i = 0; i < 4; ++i) {
+            if (walls[i] == -1) {
+                MapLocation loc = null;
+                Direction awayFromWall = Direction.CENTER;
+                switch (i) {
+                    case 0: // NORTH
+                        loc = rc.getLocation().translate(0, 4);
+                        awayFromWall = Direction.SOUTH;
+                        break;
+                    case 1: // EAST
+                        loc = rc.getLocation().translate(4, 0);
+                        awayFromWall = Direction.WEST;
+                        break;
+                    case 2: // SOUTH
+                        loc = rc.getLocation().translate(0, -4);
+                        awayFromWall = Direction.NORTH;
+                        break;
+                    case 3: // WEST
+                        loc = rc.getLocation().translate(-4, 0);
+                        awayFromWall = Direction.EAST;
+                }
+
+                if (!rc.onTheMap(loc)) {
+                    while (!rc.onTheMap(loc.add(awayFromWall))) {
+                        loc = loc.add(awayFromWall);
+                    }
+                    walls[i] = i % 2 == 0 ? loc.y : loc.x;
+                    // flagsToSend.add(new FlagInfo(true, rc.getTeam(), loc, spawnEC, i * 2));//
+                    // hacky lmao
+                    // System.out.println("Found wall at " + loc);
+                }
+            }
+        }
+
+
         RobotInfo closestEnemyMuck = null;
         int closestMuckDist = 1000;
         for (RobotInfo r : rc.senseNearbyRobots()) {
@@ -91,7 +128,8 @@ public class Slanderer extends RobotPlayer implements RoleController {
         MapLocation myLoc = rc.getLocation();
         for (Direction d : moves) {
             MapLocation testLoc = myLoc.add(d);
-            if (testLoc.distanceSquaredTo(spawnEC) <= endRadius2) {
+            if (testLoc.distanceSquaredTo(spawnEC) <= endRadius2 && testLoc.add(d).x != walls[1] && testLoc.add(d).x != walls[3] 
+                    && testLoc.add(d).y != walls[0] && testLoc.add(d).y != walls[2]){
                 possibleMoves.add(d);
             }
         }

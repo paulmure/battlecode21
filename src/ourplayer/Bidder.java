@@ -21,14 +21,14 @@ public class Bidder extends RobotPlayer {
         lastBid = bid;
     }
 
-    public int bid() throws GameActionException {
+    public int bid(int influence) throws GameActionException {
         // stop voting if we get majority
         int thisRoundVotes = rc.getTeamVotes();
         if (thisRoundVotes > 750) {
             return 0;
         }
 
-        int bid = getNewBid(rc.getInfluence(), thisRoundVotes > lastRoundVotes);
+        int bid = getNewBid(influence, thisRoundVotes > lastRoundVotes);
 
         // update state
         lastRoundVotes = thisRoundVotes;
@@ -75,8 +75,8 @@ public class Bidder extends RobotPlayer {
             bid = lastBid + (roundsLost * increment);
         }
 
-        if (bid > rc.getInfluence()) {
-            bid = rc.getInfluence();
+        if (bid > influence) {
+            bid = influence;
         }
         
         // System.out.println("bid final: "+bid);

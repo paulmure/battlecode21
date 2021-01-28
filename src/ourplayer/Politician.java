@@ -23,6 +23,7 @@ public class Politician extends RobotPlayer implements RoleController {
     int turnsWaited = 0;
     private double maxRadius;
     private MapLocation spawnEC;
+    private MapLocation tradingEC;
     private double ecPassability;
     private int spawnECid;
     private int age;
@@ -34,6 +35,8 @@ public class Politician extends RobotPlayer implements RoleController {
     int[] walls = { -1, -1, -1, -1 }; // N, E, S, W
     int wallRepulsionDistance = 3;
     int[] possibleEmpowerDists = {1, 2, 4, 5, 8, 9};
+    double allyBaseThreshold = 1;
+    double enemyBaseThreshold = 2;
 
     public Politician() throws GameActionException {
         spawnRound = rc.getRoundNum();
@@ -46,6 +49,7 @@ public class Politician extends RobotPlayer implements RoleController {
                         .distanceSquaredTo(rc.getLocation()) < spawnEC.distanceSquaredTo(rc.getLocation()))
                         && nearby[i].team.equals(rc.getTeam())) {
                     spawnEC = nearby[i].location;
+                    tradingEC = spawnEC;
                     spawnECid = nearby[i].ID;
                 }
             }
@@ -68,6 +72,7 @@ public class Politician extends RobotPlayer implements RoleController {
 
     public Politician(MapLocation ec, int ecID, double ecP) throws GameActionException {
         spawnEC = ec;
+        tradingEC = ec;
         spawnECid = ecID;
         ecPassability = ecP;
         // System.out.println("joe mama: " + ec);
@@ -260,6 +265,8 @@ public class Politician extends RobotPlayer implements RoleController {
                 if (rc.canEmpower(myLoc.distanceSquaredTo(notOurEC.location))
                         && myLoc.isAdjacentTo(notOurEC.location)) {
                     rc.empower(myLoc.distanceSquaredTo(notOurEC.location));
+                } else if (canKill(notOurEC)) {
+                    rc.empower(myLoc.distanceSquaredTo(notOurEC.location));
                 } else {
                     tryMove(getRoughMoveTowards(notOurEC.location, 2));
                 }
@@ -294,6 +301,8 @@ public class Politician extends RobotPlayer implements RoleController {
             if (rc.canEmpower(d2toTarget)) {
                 if (rc.senseNearbyRobots(d2toTarget).length == 1) {
                     rc.empower(d2toTarget);
+                } else if (canKill(targetEC)) {
+                    rc.empower(myLoc.distanceSquaredTo(targetEC.location));
                 } else if (targetEC.team.equals(Team.NEUTRAL) && turnsWaited >= neutralTurnsToWait) {
                     rc.empower(d2toTarget);
                 } else if ((targetEC.team.equals(rc.getTeam().opponent()) || targetEC.team.equals(rc.getTeam()))
@@ -399,6 +408,8 @@ public class Politician extends RobotPlayer implements RoleController {
                 if (rc.canEmpower(myLoc.distanceSquaredTo(notOurEC.location))
                         && myLoc.isAdjacentTo(notOurEC.location)) {
                     rc.empower(myLoc.distanceSquaredTo(notOurEC.location));
+                } else if (canKill(notOurEC)) {
+                    rc.empower(myLoc.distanceSquaredTo(notOurEC.location));
                 } else {
                     tryMove(getRoughMoveTowards(notOurEC.location, 2));
                 }
@@ -420,6 +431,9 @@ public class Politician extends RobotPlayer implements RoleController {
 
     public int efficientEmpowerRadius() {
         double bestScore = 1;
+        if (targetEC != null) {
+            bestScore = allyBaseThreshold + (enemyBaseThreshold - allyBaseThreshold) * (1 - (chebyshevDistance(rc.getLocation(), targetEC.location) * 1.0 / chebyshevDistance(tradingEC, targetEC.location)));
+        }
         int bestRadius = 0;
         int myConviction = rc.getConviction();
         for (int i : possibleEmpowerDists) {
@@ -429,6 +443,9 @@ public class Politician extends RobotPlayer implements RoleController {
                 bestRadius = i;
             }
         }
+        // if (bestRadius != 0) {
+        //     System.out.println("exploding with score " + bestScore);
+        // }
         return bestRadius;
     }
 
@@ -451,7 +468,7 @@ public class Politician extends RobotPlayer implements RoleController {
                     influenceUsed += Math.min(distributed, r.influence - r.conviction);
                 }
             } else {
-                if (distributed > r.conviction) {
+                if (distributed > r.conviction && !r.type.equals(RobotType.POLITICIAN)) {
                     ++unitsKilled;
                 } 
                 if (r.type.equals(RobotType.POLITICIAN)) {
@@ -468,6 +485,12 @@ public class Politician extends RobotPlayer implements RoleController {
             }
         }
         return unitsKilled * influenceUsed / politicianInfluence;
+    }
+
+    public boolean canKill(RobotInfo r) {
+        int d2ToTarget = rc.getLocation().distanceSquaredTo(r.location);
+        return rc.canEmpower(d2ToTarget) && (int)(((rc.getConviction() - 10) / rc.senseNearbyRobots(d2ToTarget).length) 
+                * rc.getEmpowerFactor(rc.getTeam(), 0)) > r.conviction;
     }
 
 }
